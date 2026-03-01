@@ -16,6 +16,7 @@ load_dotenv()
 from backend.agents.career_agent import run_career_agent
 from backend.agents.skill_agent import run_skill_agent
 from backend.agents.cover_letter_agent import run_cover_letter_agent
+from backend.agents.resume_optimization_agent import run_resume_optimization_agent
 from backend.github_yaml_db import read_yaml_from_github, append_log_entry
 
 logger = logging.getLogger("OrchestrAI.ExecutionAgent")
@@ -76,10 +77,14 @@ def run_orchestrai_pipeline():
     # STEP 2.5: Generate cover letters
     run_cover_letter_agent()
 
+    # STEP 2.6: Optimize Resumes
+    run_resume_optimization_agent()
+
     # STEP 3: Read GitHub database
     jobs_data = read_yaml_from_github("database/jobs.yaml")
     skill_gap_data = read_yaml_from_github("database/skill_gap_per_job.yaml")
     cover_letter_data = read_yaml_from_github("database/cover_letter_index.yaml")
+    optimization_data = read_yaml_from_github("database/resume_optimizations.yaml")
 
     jobs = jobs_data.get("jobs", []) if isinstance(jobs_data, dict) else []
     skill_analysis = skill_gap_data.get("job_skill_analysis", []) if isinstance(skill_gap_data, dict) else []
@@ -94,6 +99,12 @@ def run_orchestrai_pipeline():
     cl_lookup = {
         (item.get("company", ""), item.get("role", "")): item.get("link", "#")
         for item in cover_letters if isinstance(item, dict)
+    }
+    
+    opt_records = optimization_data if isinstance(optimization_data, list) else []
+    opt_lookup = {
+        (item.get("company", ""), item.get("role", "")): item.get("optimized_resume_link", "#")
+        for item in opt_records if isinstance(item, dict)
     }
 
     # STEP 5: Generate HTML table rows
@@ -111,9 +122,15 @@ def run_orchestrai_pipeline():
         
         cl_link = cl_lookup.get(key, "#")
         if cl_link and cl_link != "#":
-            cl_html = f'<a href="{cl_link}" style="background:#2e7d32; color:white; padding:6px 12px; text-decoration:none; border-radius:6px;">View Cover Letter</a>'
+            cl_html = f'<a href="{cl_link}" style="background:#2e7d32; color:white; padding:6px 12px; text-decoration:none; border-radius:6px; display:inline-block; margin-bottom: 4px;">Cover Letter</a>'
         else:
             cl_html = "Not Generated"
+            
+        opt_link = opt_lookup.get(key, "#")
+        if opt_link and opt_link != "#":
+            opt_html = f'<a href="{opt_link}" style="background:#0277bd; color:white; padding:6px 12px; text-decoration:none; border-radius:6px; display:inline-block;">Optimized Resume</a>'
+        else:
+            opt_html = "Not Generated"
 
         rows += f"""
         <tr>
@@ -124,7 +141,7 @@ def run_orchestrai_pipeline():
             <td><a href="{job.get('apply_link','#')}">Apply</a></td>
             <td>{missing_skills}</td>
             <td>{roadmap}</td>
-            <td>{cl_html}</td>
+            <td>{cl_html}<br><br>{opt_html}</td>
         </tr>
         """
 
@@ -143,7 +160,7 @@ def run_orchestrai_pipeline():
                 <th>Apply</th>
                 <th>Skill Gap</th>
                 <th>Learning Roadmap</th>
-                <th>Cover Letter</th>
+                <th>Generated Assets</th>
             </tr>
             {rows}
         </table>
