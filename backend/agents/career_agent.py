@@ -761,21 +761,11 @@ def run_career_agent() -> dict:
             summary["errors"].append(err)
             _log_to_github(f"STORE ERROR — {exc}", level="ERROR")
 
-    # ── Step 4: Send email ────────────────────────────────────────────────────
+    # ── Step 4: Email delegated to ExecutionAgent ─────────────────────────────
     # Reads all stored jobs so the email covers the full catalogue
-    try:
-        all_stored_jobs = read_jobs_from_github()
-        jobs_for_email  = all_stored_jobs or relevant_jobs
-        email_ok = send_email(jobs_for_email)
-        summary["email_sent"] = email_ok
-        if email_ok:
-            logger.info("CareerAgent: Email sent successfully")
-            _log_to_github("Email sent successfully")
-    except Exception as exc:
-        err = f"Email step failed: {exc}"
-        logger.error("CareerAgent: %s", err)
-        summary["errors"].append(err)
-        _log_to_github(f"EMAIL ERROR — {exc}", level="ERROR")
+    summary["email_sent"] = False  # Legacy field, handled downstream now
+    logger.info("CareerAgent: Email delegation passed to ExecutionAgent")
+    _log_to_github("Email delegation passed to ExecutionAgent")
 
     # ── Final status ──────────────────────────────────────────────────────────
     if not summary["errors"]:

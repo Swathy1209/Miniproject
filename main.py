@@ -45,16 +45,27 @@ def _check_env() -> None:
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
+def run_full_pipeline():
+    from backend.agents.career_agent import run_career_agent
+    from backend.agents.skill_agent import run_skill_agent
+    from backend.agents.execution_agent import run_execution_agent
+    
+    logger.info("Starting Full OrchestrAI Pipeline...")
+    run_career_agent()
+    run_skill_agent()
+    run_execution_agent()
+    logger.info("Pipeline Execution Complete!")
+
+
 if __name__ == "__main__":
     _check_env()
 
-    from backend.agents.career_agent import run_career_agent
     from backend.scheduler import schedule_daily_internship_email, run_once_now
 
-    # Pass --now flag to run immediately (useful for testing on Render)
+    # Pass --now flag to run immediately (useful for GitHub Actions or manual test)
     if len(sys.argv) > 1 and sys.argv[1] == "--now":
-        logger.info("Manual trigger: running career agent immediately...")
-        run_once_now(run_career_agent)
+        logger.info("Manual trigger: running full pipeline immediately...")
+        run_once_now(run_full_pipeline)
     else:
-        logger.info("Starting scheduler: career agent will run daily at 9:30 AM IST.")
-        schedule_daily_internship_email(run_career_agent, hour=9, minute=30)
+        logger.info("Starting scheduler: full pipeline will run daily at 9:30 AM IST.")
+        schedule_daily_internship_email(run_full_pipeline, hour=9, minute=30)
