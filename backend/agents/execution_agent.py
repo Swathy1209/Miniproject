@@ -4,8 +4,8 @@ OrchestrAI Autonomous Multi-Agent System
 
 Flow:
   1. Reads database/jobs.yaml from GitHub
-  2. Reads database/skill_gap.yaml from GitHub
-  3. Consolidates everything into a clean, modern HTML email
+  2. Reads database/skill_gap_per_job.yaml from GitHub
+  3. Consolidates everything into a clean HTML table email
   4. Sends the email using SMTP (e.g. Gmail)
   5. Logs activity to database/agent_logs.yaml
 """
@@ -28,7 +28,7 @@ logger = logging.getLogger("OrchestrAI.ExecutionAgent")
 
 # File paths in GitHub repo
 JOBS_FILE      = "database/jobs.yaml"
-SKILL_GAP_FILE = "database/skill_gap.yaml"
+SKILL_GAP_FILE = "database/skill_gap_per_job.yaml"
 
 # Email Configuration
 EMAIL_USER     = os.getenv("EMAIL_USER", "")
@@ -38,13 +38,13 @@ SMTP_HOST      = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT      = int(os.getenv("SMTP_PORT", 587))
 
 
-def read_database() -> tuple[list[dict], dict]:
+def read_database() -> tuple[list[dict], list[dict]]:
     """
-    Read both jobs.yaml and skill_gap.yaml from GitHub database.
-    Returns: (jobs_list, skill_gap_dict)
+    Read both jobs.yaml and skill_gap_per_job.yaml from GitHub database.
+    Returns: (jobs_list, job_skill_analysis_list)
     """
     jobs = []
-    skill_gap = {}
+    job_skill_analysis = []
 
     try:
         jobs_data = read_yaml_from_github(JOBS_FILE)
@@ -57,29 +57,34 @@ def read_database() -> tuple[list[dict], dict]:
 
     try:
         gap_data = read_yaml_from_github(SKILL_GAP_FILE)
-        skill_gap = gap_data.get("skill_analysis", {})
-        logger.info("ExecutionAgent: Fetched skill_gap analysis.")
+        job_skill_analysis = gap_data.get("job_skill_analysis", [])
+        if not isinstance(job_skill_analysis, list):
+            job_skill_analysis = []
+        logger.info("ExecutionAgent: Fetched job_skill_analysis list.")
     except Exception as e:
-        logger.error("ExecutionAgent: Failed to read skill_gap.yaml - %s", e)
+        logger.error("ExecutionAgent: Failed to read skill_gap_per_job.yaml - %s", e)
 
-    return jobs, skill_gap
+    return jobs, job_skill_analysis
 
 
-def generate_html_email(jobs: list[dict], skill_gap: dict) -> str:
-    """Generate a clean, modern HTML email wrapping all the data."""
+def generate_html_email(jobs: list[dict], job_skill_analysis: list[dict]) -> str:
+    """Generate a responsive HTML email containing a table of jobs and skill gaps."""
     date_str = datetime.now().strftime("%d %B %Y")
     
-    # Extract skill gap data
-    current_skills = skill_gap.get("current_skills", [])
-    missing_skills = skill_gap.get("missing_skills", [])
-    roadmap = skill_gap.get("recommended_learning_roadmap", [])
-    user_name = skill_gap.get("user", "User").title()
+    # Create a quick lookup for skill gaps: key = (company, role)
+    gap_lookup = {}
+    for analysis in job_skill_analysis:
+        comp = analysis.get("company", "Unknown Company").lower()
+        role = analysis.get("role", "Unknown Role").lower()
+        gap_lookup[(comp, role)] = {
+            "missing_skills": analysis.get("missing_skills", []),
+            "roadmap": analysis.get("roadmap", [])
+        }
 
-    # -- HTML Styling Constants --
     html = f"""
     <html>
-      <body style="font-family: Arial, sans-serif; background-color: #f4f6f9; color: #333; margin:0; padding:20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+      <body style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f9; color: #333; margin:0; padding:20px;">
+        <div style="max-width: 1200px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
           
           <!-- HEADER -->
           <div style="background-color: #1a73e8; color: #ffffff; padding: 20px; text-align: center;">
@@ -88,57 +93,76 @@ def generate_html_email(jobs: list[dict], skill_gap: dict) -> str:
           </div>
           
           <div style="padding: 20px;">
-            <p>Hi <b>{user_name}</b>,</p>
-            <p>Here is your daily consolidated report of new AI/Data Science internships and your personalized learning roadmap.</p>
+            <p>Hi there,</p>
+            <p>Here is your daily consolidated report of new AI/Data Science internships, along with personalized skill gap analyses and learning roadmaps per job.</p>
     """
 
-    # -- Skill Gap Section --
-    html += """
-            <h2 style="color: #1a73e8; border-bottom: 2px solid #e8eaed; padding-bottom: 5px; margin-top: 30px;">
-              🧠 Your Learning Roadmap
-            </h2>
-    """
-    if missing_skills and roadmap:
-        html += f"""
-            <p><b>Target Skills to Learn:</b> {', '.join(missing_skills)}</p>
-            <div style="background-color: #fef7e0; border-left: 4px solid #fbbc04; padding: 10px 15px; margin-bottom: 20px; border-radius: 4px;">
-              <ul style="margin: 0; padding-left: 20px;">
-        """
-        for step in roadmap:
-            html += f"<li style='margin-bottom: 5px;'>{step}</li>"
-        html += """
-              </ul>
-            </div>
-        """
-    else:
-        html += "<p>You are fully equipped with all the required skills for today's jobs! 🎉</p>"
-
-    # -- Jobs Section --
-    html += f"""
-            <h2 style="color: #1a73e8; border-bottom: 2px solid #e8eaed; padding-bottom: 5px; margin-top: 30px;">
-              💼 Latest Internships ({len(jobs)})
-            </h2>
-    """
     if jobs:
+        html += """
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 900px; font-size: 13px;">
+              <thead>
+                <tr style="background-color: #f1f3f4; text-align: left;">
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Company</th>
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Role</th>
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Location</th>
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Role Keywords</th>
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Technical Skills</th>
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Skill Gap</th>
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Learning Roadmap</th>
+                  <th style="padding: 12px; border-bottom: 2px solid #ddd;">Apply</th>
+                </tr>
+              </thead>
+              <tbody>
+        """
+
         for job in jobs:
-            title = job.get("role", "Unknown Role")
             company = job.get("company", "Unknown Company")
+            role = job.get("role", "Unknown Role")
+            location = job.get("location", "Location Not Specified")
             link = job.get("apply_link", "#")
             req_skills = job.get("technical_skills", [])
-            location = job.get("location", "Location Not Specified")
+            keywords = job.get("role_keywords", [])
 
-            skill_tags = "".join(
-                [f"<span style='display:inline-block; background:#e8f0fe; color:#1a73e8; font-size:12px; padding:3px 8px; border-radius:12px; margin:2px;'>{s}</span>" for s in req_skills]
-            )
+            # Format skills/keywords
+            kws_str = ", ".join(keywords) if keywords else "-"
+            skills_str = ", ".join(req_skills) if req_skills else "-"
+            
+            # Fetch corresponding gap analysis
+            gap_info = gap_lookup.get((company.lower(), role.lower()), {})
+            missing_skills = gap_info.get("missing_skills", [])
+            roadmap = gap_info.get("roadmap", [])
+            
+            missing_str = ", ".join(missing_skills) if missing_skills else "None"
+            
+            # Use arrows for roadmap steps
+            if roadmap:
+                # If the AI started the step with a dash or bullet, clean it up
+                clean_roadmap = [step.lstrip("-•* ") for step in roadmap]
+                roadmap_str = " &rarr; ".join(clean_roadmap)
+            else:
+                roadmap_str = "Ready to apply!"
 
             html += f"""
-            <div style="border: 1px solid #e8eaed; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
-              <h3 style="margin:0 0 5px 0; font-size:18px;">{title} <span style="font-weight:normal; color:#666;">at</span> {company}</h3>
-              <p style="margin:0 0 10px 0; font-size:14px; color:#555;">📍 {location}</p>
-              <div style="margin-bottom:12px;">{skill_tags}</div>
-              <a href="{link}" style="display:inline-block; background-color:#1a73e8; color:#fff; text-decoration:none; padding:8px 15px; border-radius:4px; font-size:14px; font-weight:bold;">Apply Now &rarr;</a>
-            </div>
+                <tr style="border-bottom: 1px solid #eee;">
+                  <td style="padding: 12px; vertical-align: top;"><strong>{company}</strong></td>
+                  <td style="padding: 12px; vertical-align: top;">{role}</td>
+                  <td style="padding: 12px; vertical-align: top;">{location}</td>
+                  <td style="padding: 12px; vertical-align: top; color: #555;">{kws_str}</td>
+                  <td style="padding: 12px; vertical-align: top; color: #555;">{skills_str}</td>
+                  <td style="padding: 12px; vertical-align: top; color: #d93025; font-weight: bold;">{missing_str}</td>
+                  <td style="padding: 12px; vertical-align: top; color: #188038;">{roadmap_str}</td>
+                  <td style="padding: 12px; vertical-align: top;">
+                    <a href="{link}" style="display:inline-block; background-color:#1a73e8; color:#fff; text-decoration:none; padding:6px 12px; border-radius:4px; font-weight:bold; white-space: nowrap;">Apply &rarr;</a>
+                  </td>
+                </tr>
             """
+            
+        html += """
+              </tbody>
+            </table>
+          </div>
+        """
     else:
         html += "<p>No new internship listings matched your criteria today.</p>"
 
@@ -211,11 +235,10 @@ def run_execution_agent() -> dict:
     logger.info("ExecutionAgent: Starting process...")
     log_agent_activity("Consolidating daily report and sending email")
 
-    jobs, skill_gap = read_database()
+    jobs, job_skill_analysis = read_database()
 
-    # Even if they are empty, we might still want to send a status email
-    subject = f"🚀 OrchestrAI Daily Briefing: {len(jobs)} Internships & Your Roadmap"
-    html_content = generate_html_email(jobs, skill_gap)
+    subject = f"🚀 OrchestrAI: {len(jobs)} Internships & Per-Job AI Roadmaps"
+    html_content = generate_html_email(jobs, job_skill_analysis)
 
     sent_ok = send_email(subject, html_content)
     

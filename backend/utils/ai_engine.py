@@ -146,6 +146,64 @@ def _keyword_extract_skills(text: str) -> list[str]:
     return found
 
 
+def generate_per_job_roadmap(
+    user_skills: list[str],
+    job_skills: list[str],
+    missing_skills: list[str],
+) -> list[str]:
+    """
+    Generate a concise, prioritised learning roadmap using OpenAI for a specific job.
+
+    Args:
+        user_skills:    Skills the user already has.
+        job_skills:     Skills required by this specific job.
+        missing_skills: Skills required by the job but not in user's profile.
+
+    Returns:
+        List of actionable roadmap step strings.
+    """
+    if not missing_skills:
+        return ["No skill gaps detected. You are well-equipped for this role!"]
+
+    if OPENAI_API_KEY:
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=OPENAI_API_KEY)
+
+            prompt = (
+                f"User skills: {', '.join(user_skills)}\n\n"
+                f"Job requires: {', '.join(job_skills)}\n\n"
+                f"Missing skills: {', '.join(missing_skills)}\n\n"
+                "Generate a concise learning roadmap for this job.\n"
+                "Return ONLY the bullet points, one per line, starting with a dash (-)."
+            )
+
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are an expert technical career coach. Give practical, prioritised advice."
+                        ),
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=400,
+                temperature=0.5,
+            )
+
+            raw = response.choices[0].message.content.strip()
+            roadmap = [line.lstrip("- ").strip() for line in raw.splitlines() if line.strip()]
+            logger.info("AIEngine: OpenAI generated %d roadmap steps for job.", len(roadmap))
+            return roadmap if roadmap else _keyword_roadmap(missing_skills)
+
+        except Exception as exc:
+            logger.warning("AIEngine: OpenAI roadmap failed (%s) — using fallback.", exc)
+
+    return _keyword_roadmap(missing_skills)
+
+
 def generate_learning_roadmap(
     user_skills: list[str],
     missing_skills: list[str],
