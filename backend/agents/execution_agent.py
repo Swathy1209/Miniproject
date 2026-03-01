@@ -114,7 +114,7 @@ def run_orchestrai_pipeline():
 
     apply_packages = apply_packages_data if isinstance(apply_packages_data, list) else []
     app_pkg_lookup = {
-        (item.get("company", ""), item.get("role", "")): item.get("status", "Not Generated")
+        (item.get("company", ""), item.get("role", "")): item
         for item in apply_packages if isinstance(item, dict)
     }
 
@@ -143,8 +143,16 @@ def run_orchestrai_pipeline():
         else:
             opt_html = "Not Generated"
             
-        app_status = app_pkg_lookup.get(key, "Not Generated")
+        app_pkg = app_pkg_lookup.get(key, {})
+        app_status = app_pkg.get("status", "Not Generated")
+        app_link = app_pkg.get("application_package_link", "#")
+        
         status_color = "#f29900" if app_status == "Not Generated" else "#1a73e8"
+        
+        if app_link and app_link != "#":
+            app_html = f'<br><br><a href="{app_link}" style="padding:4px 8px; border-radius:4px; font-weight:bold; color:white; background-color:{status_color}; font-size:11px; text-decoration:none; display:inline-block;">{app_status}</a>'
+        else:
+            app_html = f'<br><br><span style="padding:4px 8px; border-radius:4px; font-weight:bold; color:white; background-color:{status_color}; font-size:11px; display:inline-block;">{app_status}</span>'
 
         rows += f"""
         <tr>
@@ -152,7 +160,7 @@ def run_orchestrai_pipeline():
             <td>{job.get('role', '')}</td>
             <td>{job.get('location', '')}</td>
             <td>{', '.join(job.get('technical_skills', []))}</td>
-            <td><a href="{job.get('apply_link','#')}" style="font-weight:bold;">Apply</a><br><br><span style="padding:4px 8px; border-radius:4px; font-weight:bold; color:white; background-color:{status_color}; font-size:11px;">{app_status}</span></td>
+            <td><a href="{job.get('apply_link','#')}" style="font-weight:bold;">Apply</a>{app_html}</td>
             <td>{missing_skills}</td>
             <td>{roadmap}</td>
             <td>{cl_html}<br><br>{opt_html}</td>

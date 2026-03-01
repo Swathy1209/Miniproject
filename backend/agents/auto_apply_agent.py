@@ -212,7 +212,8 @@ def run_auto_apply_agent() -> list[dict]:
         }
         
         # Generate markdown file
-        create_markdown_package(pkg)
+        package_link = create_markdown_package(pkg)
+        pkg["application_package_link"] = package_link
         
         application_packages.append(pkg)
                 
