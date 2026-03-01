@@ -15,6 +15,7 @@ load_dotenv()
 
 from backend.agents.career_agent import run_career_agent
 from backend.agents.skill_agent import run_skill_agent
+from backend.agents.cover_letter_agent import run_cover_letter_agent
 from backend.github_yaml_db import read_yaml_from_github, append_log_entry
 
 logger = logging.getLogger("OrchestrAI.ExecutionAgent")
@@ -72,17 +73,27 @@ def run_orchestrai_pipeline():
     # STEP 2: Generate per-job skill gap analysis
     run_skill_agent()
 
+    # STEP 2.5: Generate cover letters
+    run_cover_letter_agent()
+
     # STEP 3: Read GitHub database
     jobs_data = read_yaml_from_github("database/jobs.yaml")
     skill_gap_data = read_yaml_from_github("database/skill_gap_per_job.yaml")
+    cover_letter_data = read_yaml_from_github("database/cover_letter_index.yaml")
 
     jobs = jobs_data.get("jobs", []) if isinstance(jobs_data, dict) else []
     skill_analysis = skill_gap_data.get("job_skill_analysis", []) if isinstance(skill_gap_data, dict) else []
 
-    # STEP 4: Convert skill analysis to lookup dictionary
+    # STEP 4: Convert skill & cover letter analysis to lookup dictionaries
     skill_lookup = {
         (item.get("company", ""), item.get("role", "")): item
         for item in skill_analysis if isinstance(item, dict)
+    }
+    
+    cover_letters = cover_letter_data.get("cover_letters", []) if isinstance(cover_letter_data, dict) else []
+    cl_lookup = {
+        (item.get("company", ""), item.get("role", "")): item.get("link", "#")
+        for item in cover_letters if isinstance(item, dict)
     }
 
     # STEP 5: Generate HTML table rows
@@ -97,6 +108,12 @@ def run_orchestrai_pipeline():
 
         missing_skills = ", ".join(analysis.get("missing_skills", []))
         roadmap = " &rarr; ".join(analysis.get("roadmap", []))
+        
+        cl_link = cl_lookup.get(key, "#")
+        if cl_link and cl_link != "#":
+            cl_html = f'<a href="{cl_link}" style="background:#2e7d32; color:white; padding:6px 12px; text-decoration:none; border-radius:6px;">View Cover Letter</a>'
+        else:
+            cl_html = "Not Generated"
 
         rows += f"""
         <tr>
@@ -107,6 +124,7 @@ def run_orchestrai_pipeline():
             <td><a href="{job.get('apply_link','#')}">Apply</a></td>
             <td>{missing_skills}</td>
             <td>{roadmap}</td>
+            <td>{cl_html}</td>
         </tr>
         """
 
@@ -125,6 +143,7 @@ def run_orchestrai_pipeline():
                 <th>Apply</th>
                 <th>Skill Gap</th>
                 <th>Learning Roadmap</th>
+                <th>Cover Letter</th>
             </tr>
             {rows}
         </table>
