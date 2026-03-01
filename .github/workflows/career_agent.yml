@@ -1,43 +1,43 @@
-name: OrchestrAI Career Agent — Daily Run
+
+name: OrchestrAI Career Agent Daily Run
 
 on:
-  # Runs every day at 9:30 AM IST = 4:00 AM UTC
   schedule:
     - cron: "0 4 * * *"
-
-  # Allows manual trigger from GitHub Actions tab
   workflow_dispatch:
 
 jobs:
   run-career-agent:
-    name: Fetch Internships & Send Email
+    name: Fetch Internships and Send Email
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     env:
-      GITHUB_TOKEN:      ${{ secrets.GH_PAT }}
-      GITHUB_USERNAME:   ${{ secrets.GITHUB_USERNAME }}
-      GITHUB_REPO:       ${{ secrets.GITHUB_REPO }}
-      GITHUB_BRANCH:     main
-      OPENAI_API_KEY:    ${{ secrets.OPENAI_API_KEY }}
-      EMAIL_USER:        ${{ secrets.EMAIL_USER }}
-      EMAIL_PASS:        ${{ secrets.EMAIL_PASS }}
-      EMAIL_RECEIVER:    ${{ secrets.EMAIL_RECEIVER }}
-      SMTP_HOST:         smtp.gmail.com
-      SMTP_PORT:         "587"
+      GITHUB_TOKEN:    ${{ secrets.GH_PAT }}
+      GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
+      GITHUB_REPO:     ${{ secrets.GITHUB_REPO }}
+      GITHUB_BRANCH:   main
+      OPENAI_API_KEY:  ${{ secrets.OPENAI_API_KEY }}
+      EMAIL_USER:      ${{ secrets.EMAIL_USER }}
+      EMAIL_PASS:      ${{ secrets.EMAIL_PASS }}
+      EMAIL_RECEIVER:  ${{ secrets.EMAIL_RECEIVER }}
+      SMTP_HOST:       smtp.gmail.com
+      SMTP_PORT:       "587"
 
     steps:
-      - name: ⬇️ Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python 3.11
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: 🤖 Run Career Agent
+      - name: Run Career Agent
         run: python main.py --now
+
+
