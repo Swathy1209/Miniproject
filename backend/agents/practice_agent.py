@@ -68,7 +68,8 @@ def _slugify(text: str) -> str:
 
 
 def _get_github_url(file_path: str) -> str:
-    return f"https://raw.githubusercontent.com/{_REPO_SLUG}/main/{file_path}"
+    """Use raw.githack.com which serves files with correct Content-Type headers."""
+    return f"https://raw.githack.com/{_REPO_SLUG}/main/{file_path}"
 
 
 def _ai_chat(system_prompt: str, user_prompt: str, max_tokens: int = 800) -> str:
