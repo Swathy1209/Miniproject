@@ -76,25 +76,42 @@ def _get_github_url(file_path: str) -> str:
     return f"https://raw.githack.com/{_REPO_SLUG}/main/{file_path}"
 
 
+import time
 def _ai_chat(system_prompt: str, user_prompt: str, max_tokens: int = 800) -> str:
-    """Send a chat completion request to OpenAI. Returns empty string on failure."""
+    """Send a chat completion request to OpenAI with robust exponential backoff."""
     if not openai_client:
         logger.warning("PracticeAgent: OpenAI API key missing — returning fallback.")
         return ""
-    try:
-        resp = openai_client.chat.completions.create(
-            model="gemini-1.5-flash",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            max_tokens=max_tokens,
-            temperature=0.7,
-        )
-        return resp.choices[0].message.content.strip()
-    except Exception as exc:
-        logger.warning("PracticeAgent: OpenAI call failed — %s", exc)
-        return ""
+    
+    max_retries = 3
+    base_wait = 20  # Gemini free tier has strict 15 RPM
+    
+    for attempt in range(max_retries):
+        try:
+            resp = openai_client.chat.completions.create(
+                model="gemini-2.0-flash",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                max_tokens=max_tokens,
+                temperature=0.7,
+            )
+            return resp.choices[0].message.content.strip()
+        except Exception as exc:
+            if "429" in str(exc):
+                # Rate limit hit, wait and retry
+                wait_time = base_wait * (2 ** attempt)
+                logger.warning(f"PracticeAgent: Rate limit hit. Retrying in {wait_time}s... (Attempt {attempt+1}/{max_retries})")
+                time.sleep(wait_time)
+            elif attempt == max_retries - 1:
+                logger.warning("PracticeAgent: OpenAI call failed after retries — %s", exc)
+                return ""
+            else:
+                logger.warning("PracticeAgent: OpenAI call failed. Retrying... — %s", exc)
+                time.sleep(2)
+        
+    return ""
 
 
 # ==============================================================================
@@ -648,6 +665,10 @@ def generate_course_recommendations(missing_skills: list[str], role: str, compan
 # FEATURE 8 — Generate Practice HTML Portal
 # ==============================================================================
 
+# ==============================================================================
+# FEATURE 8 — Generate Practice HTML Portal (PRODUCTION UI)
+# ==============================================================================
+
 def _render_practice_html(
     company: str,
     role: str,
@@ -659,422 +680,487 @@ def _render_practice_html(
     projects: list[dict],
     courses: list[dict],
 ) -> str:
-    """Render a beautiful, self-contained HTML practice portal."""
+    """Render a beautiful, self-contained HTML practice portal akin to LeetCode/LinkedIn Prep."""
+    
+    # Validation step: Disallow placeholders/poor rendering.
+    required_len = {"qa": 10, "trans": 3, "speak": 1}
+    if len(qa_pairs) < required_len["qa"] or not hr_intro or "Placeholder" in hr_intro:
+        raise ValueError("Detected incomplete placeholder content. Regenerating...")
 
-    # --- Q&A Section ---
+    # --- Feature 1: Real Q&A ---
     qa_html = ""
     for i, pair in enumerate(qa_pairs, 1):
         qa_html += f"""
         <div class="card qa-card">
-            <div class="qa-q"><span class="badge">Q{i}</span> {pair['question']}</div>
-            <div class="qa-a"><strong>Answer:</strong> {pair['answer']}</div>
+            <div class="qa-header">
+                <span class="q-badge">Q{i}</span>
+                <span class="q-text">{pair['question']}</span>
+            </div>
+            <div class="qa-body">
+                <div class="a-label">Ideal Response:</div>
+                <div class="a-text">{pair['answer']}</div>
+            </div>
         </div>"""
 
-    # --- Translation Section ---
+    # --- Feature 3: Translations ---
     trans_html = ""
-    for t in translations:
+    for idx, t in enumerate(translations, 1):
         trans_html += f"""
-        <div class="card trans-card">
-            <div class="tamil"><strong>🗣 Tamil:</strong> <em>"{t['tamil']}"</em></div>
-            <div class="prof"><strong>💼 Professional English:</strong> {t['professional']}</div>
-            <div class="prac"><strong>📝 Practice Version:</strong> {t['practice']}</div>
+        <div class="trans-item">
+            <div class="trans-tamil"><span class="lang-tag ta">Tamil</span> "{t['tamil']}"</div>
+            <div class="trans-english"><span class="lang-tag en">Pro English</span> {t['professional']}</div>
+            <div class="trans-practice"><span class="lang-tag pr">Simple</span> {t['practice']}</div>
         </div>"""
 
-    # --- Speaking Practice ---
+    # --- Feature 4: Speaking ---
     sp_data = speaking[0] if speaking else {"sentences": [], "tips": []}
-    sentences_html = "".join(f'<li class="speak-item">{s}</li>' for s in sp_data.get("sentences", []))
-    tips_html = "".join(f'<li class="tip-item">{t}</li>' for t in sp_data.get("tips", []))
+    sentences_html = "".join(f'<div class="sentence-box">💬 {s}</div>' for s in sp_data.get("sentences", []))
+    tips_html = "".join(f'<div class="tip-box">✨ {t}</div>' for t in sp_data.get("tips", []))
 
-    # --- Coding Sheets ---
-    sheets_html = ""
-    for cs in coding_sheets:
-        sheets_html += f"""
-        <a href="{cs['url']}" target="_blank" class="sheet-link">
-            <span class="sheet-icon">💻</span>
-            <span>{cs['name']}</span>
-            <span class="sheet-arrow">→</span>
-        </a>"""
-
-    # --- Projects ---
-    projects_html = ""
-    for p in projects:
-        projects_html += f"""
-        <div class="card project-card">
-            <div class="project-skill">🔧 Missing Skill: <strong>{p['skill']}</strong></div>
-            <div class="project-idea">💡 {p['project']}</div>
-        </div>"""
-
-    # --- Courses ---
+    # --- Feature 5 & 6 & 7: Resources ---
+    sheets_html = "".join(f'<a href="{cs["url"]}" target="_blank" class="resource-link"><span class="r-icon">💻</span>{cs["name"]}</a>' for cs in coding_sheets)
+    projects_html = "".join(f"""
+        <div class="proj-card">
+            <div class="proj-skill">🎯 Skill Focus: {p["skill"]}</div>
+            <div class="proj-desc">{p["project"]}</div>
+        </div>""" for p in projects)
+    
+    # Courses rendering
     courses_html = ""
     current_skill = ""
     for c in courses:
         if c["skill"] != current_skill:
-            if current_skill:
-                courses_html += "</div>"
+            if current_skill: courses_html += "</div>"
             current_skill = c["skill"]
-            courses_html += f'<div class="course-group"><h4 class="course-skill">📘 {current_skill}</h4>'
-        courses_html += f'<div class="course-item">• {c["recommendation"]}</div>'
-    if current_skill:
-        courses_html += "</div>"
+            courses_html += f'<div class="course-group"><div class="c-skill-title">📘 {current_skill}</div>'
+        # Parse YouTube/Coursera links slightly better if possible, mostly just text format
+        text = c["recommendation"]
+        is_link = "http" in text
+        html_val = f'<a href="{text}" target="_blank" class="c-link">🔗 View Resource</a>' if is_link else text
+        courses_html += f'<div class="c-item">{html_val}</div>'
+    if current_skill: courses_html += "</div>"
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Practice Portal — {company} | {role}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>{company} | {role} - Interview Prep</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {{
+            --bg-main: #0a0a0f;
+            --bg-card: #14141d;
+            --bg-hover: #1c1c28;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border: #27272a;
+            --succ: #10b981;
+            --warn: #eab308;
+            --err: #ef4444;
+        }}
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%);
-            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
             min-height: 100vh;
-            padding: 0;
         }}
-        .hero {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 60px 40px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        
+        /* Navbar */
+        .navbar {{
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }}
-        .hero::after {{
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
-            animation: pulse 8s ease-in-out infinite;
+        .brand {{ font-weight: 800; font-size: 1.25rem; background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; color: transparent; }}
+        .nav-role {{ font-weight: 500; color: var(--text-muted); font-size: 0.95rem; }}
+        
+        /* Main Layout */
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            flex: 1;
         }}
-        @keyframes pulse {{ 0%,100% {{ transform: scale(1); }} 50% {{ transform: scale(1.05); }} }}
-        .hero h1 {{
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #fff;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        
+        /* Sidebar Navigation */
+        .sidebar {{
+            position: sticky;
+            top: 5rem;
+            height: max-content;
         }}
-        .hero .subtitle {{
-            font-size: 1.1rem;
-            color: rgba(255,255,255,0.85);
-            margin-top: 10px;
-            position: relative;
-            z-index: 1;
-        }}
-        .container {{ max-width: 960px; margin: 0 auto; padding: 30px 20px; }}
-        .section {{
-            margin-bottom: 40px;
-            animation: fadeIn 0.6s ease-out;
-        }}
-        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-        .section-title {{
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #a78bfa;
-            margin-bottom: 18px;
-            border-left: 4px solid #a78bfa;
-            padding-left: 14px;
-        }}
-        .card {{
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
-            padding: 20px 24px;
-            margin-bottom: 14px;
-            backdrop-filter: blur(12px);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }}
-        .card:hover {{ transform: translateY(-2px); box-shadow: 0 8px 30px rgba(103,126,234,0.12); }}
-        .badge {{
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: #fff;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-right: 8px;
-        }}
-        .qa-q {{ font-weight: 600; color: #c4b5fd; margin-bottom: 10px; font-size: 1.05rem; }}
-        .qa-a {{ color: #d1d5db; line-height: 1.6; }}
-        .intro-box {{
-            background: linear-gradient(135deg, rgba(103,126,234,0.15), rgba(118,75,162,0.15));
-            border: 1px solid rgba(167,139,250,0.25);
-            border-radius: 16px;
-            padding: 28px;
-            font-size: 1.05rem;
-            line-height: 1.7;
-            color: #e2e8f0;
-        }}
-        .trans-card .tamil {{ color: #fbbf24; margin-bottom: 8px; }}
-        .trans-card .prof {{ color: #86efac; margin-bottom: 6px; }}
-        .trans-card .prac {{ color: #93c5fd; }}
-        .speak-item, .tip-item {{ padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }}
-        ul {{ list-style: none; padding-left: 0; }}
-        .sheet-link {{
+        .tab-btn {{
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.875rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: all 0.2s;
+            font-family: inherit;
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
+            gap: 0.75rem;
+        }}
+        .tab-btn:hover {{ background-color: rgba(255,255,255,0.03); color: var(--text-main); }}
+        .tab-btn.active {{
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+            font-weight: 600;
+        }}
+        
+        /* Content Area */
+        .content-area {{ min-width: 0; }}
+        .tab-pane {{ display: none; animation: fadeIn 0.4s ease; }}
+        .tab-pane.active {{ display: block; }}
+        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+        
+        h1.page-title {{ font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }}
+        p.page-subtitle {{ color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }}
+
+        /* Cards & UI Blocks */
+        .card {{
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 14px 20px;
-            margin-bottom: 10px;
-            color: #e0e0e0;
-            text-decoration: none;
-            transition: all 0.25s;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }}
-        .sheet-link:hover {{ background: rgba(103,126,234,0.15); border-color: #667eea; transform: translateX(4px); }}
-        .sheet-icon {{ font-size: 1.3rem; }}
-        .sheet-arrow {{ margin-left: auto; color: #667eea; font-weight: 700; }}
-        .project-skill {{ color: #fbbf24; margin-bottom: 6px; }}
-        .project-idea {{ color: #d1d5db; line-height: 1.6; }}
-        .course-group {{ margin-bottom: 18px; }}
-        .course-skill {{ color: #86efac; margin-bottom: 8px; }}
-        .course-item {{ color: #d1d5db; padding: 4px 0; padding-left: 12px; }}
-        .footer {{
-            text-align: center;
-            padding: 30px;
-            color: rgba(255,255,255,0.35);
-            font-size: 0.85rem;
-        }}
-        @media (max-width: 640px) {{
-            .hero h1 {{ font-size: 1.6rem; }}
-            .container {{ padding: 20px 14px; }}
+
+        /* Q&A Styles */
+        .qa-card {{ padding: 0; overflow: hidden; }}
+        .qa-header {{ background: rgba(255,255,255,0.02); padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; gap: 1rem; align-items: flex-start; }}
+        .q-badge {{ background: rgba(99,102,241,0.2); color: #818cf8; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; }}
+        .q-text {{ font-weight: 600; font-size: 1.1rem; line-height: 1.5; }}
+        .qa-body {{ padding: 1.5rem; }}
+        .a-label {{ font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.5rem; }}
+        .a-text {{ color: #d1d5db; line-height: 1.7; }}
+
+        /* Intro Box */
+        .intro-box {{ font-size: 1.1rem; line-height: 1.8; color: #e2e8f0; font-style: italic; border-left: 4px solid var(--accent); padding-left: 1.5rem; }}
+
+        /* Translator */
+        .trans-item {{ background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }}
+        .trans-item > div {{ margin-bottom: 0.75rem; line-height: 1.5; }}
+        .trans-item > div:last-child {{ margin-bottom: 0; }}
+        .lang-tag {{ display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-right: 0.75rem; text-transform: uppercase; }}
+        .ta {{ background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }}
+        .en {{ background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }}
+        .pr {{ background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }}
+
+        /* Speaking & Tips */
+        .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }}
+        .sentence-box {{ background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border: 1px solid var(--border); }}
+        .tip-box {{ background: rgba(245,158,11,0.05); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border: 1px solid rgba(245,158,11,0.2); color: #fef3c7; }}
+
+        /* Resources */
+        .resource-link {{ display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 1rem; color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.2s; }}
+        .resource-link:hover {{ border-color: var(--accent); transform: translateX(4px); }}
+        .r-icon {{ font-size: 1.5rem; }}
+        .proj-card {{ border-left: 3px solid var(--succ); background: var(--bg-card); padding: 1.25rem; border-radius: 0 12px 12px 0; margin-bottom: 1rem; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }}
+        .proj-skill {{ color: var(--succ); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; }}
+        
+        .course-group {{ margin-bottom: 2rem; }}
+        .c-skill-title {{ font-size: 1.1rem; font-weight: 600; color: #a5b4fc; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }}
+        .c-item {{ padding: 0.5rem 0; color: #d1d5db; display: flex; gap: 0.5rem; align-items: flex-start; }}
+        .c-item::before {{ content: "•"; color: var(--text-muted); }}
+        .c-link {{ color: var(--accent); text-decoration: none; font-weight: 500; background: rgba(99,102,241,0.1); padding: 0.25rem 0.75rem; border-radius: 4px; }}
+        .c-link:hover {{ background: rgba(99,102,241,0.2); }}
+
+        /* Coach Chat UI */
+        .coach-container {{ background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; height: 600px; }}
+        .coach-header {{ background: rgba(255,255,255,0.02); padding: 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }}
+        .coach-avatar {{ width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }}
+        .coach-status {{ display: flex; flex-direction: column; }}
+        .coach-name {{ font-weight: 600; font-size: 1rem; }}
+        .coach-online {{ font-size: 0.8rem; color: var(--succ); display: flex; align-items: center; gap: 0.3rem; }}
+        .coach-online::before {{ content: ''; width: 8px; height: 8px; background: var(--succ); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--succ); }}
+        
+        .chat-history {{ flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; }}
+        .msg-user {{ align-self: flex-end; background: var(--accent); color: white; padding: 1rem 1.25rem; border-radius: 16px 16px 0 16px; max-width: 80%; line-height: 1.5; }}
+        .msg-ai {{ align-self: flex-start; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-main); padding: 1.25rem; border-radius: 16px 16px 16px 0; max-width: 90%; width: 100%; }}
+        
+        .ai-chunk {{ margin-bottom: 1rem; }}
+        .ai-chunk:last-child {{ margin-bottom: 0; }}
+        .ai-label {{ font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: #a5b4fc; margin-bottom: 0.5rem; }}
+        .tips-ul {{ padding-left: 1.25rem; margin-top: 0.5rem; color: #fcd34d; font-size: 0.95rem; }}
+        .tips-ul li {{ margin-bottom: 0.25rem; }}
+        
+        .chat-input-area {{ padding: 1.5rem; border-top: 1px solid var(--border); background: var(--bg-main); display: flex; gap: 1rem; align-items: flex-end; }}
+        .chat-textarea {{ flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; color: var(--text-main); font-family: inherit; font-size: 0.95rem; resize: none; overflow: hidden; max-height: 150px; outline: none; transition: border-color 0.2s; }}
+        .chat-textarea:focus {{ border-color: var(--accent); }}
+        .chat-btn {{ background: var(--accent); color: white; border: none; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }}
+        .chat-btn:hover:not(:disabled) {{ background: var(--accent-hover); transform: translateY(-2px); }}
+        .chat-btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+        .chat-btn svg {{ width: 20px; height: 20px; fill: currentColor; }}
+
+        .typing-indicator {{ display: flex; gap: 4px; padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: 16px; width: fit-content; align-self: flex-start; }}
+        .dot {{ width: 8px; height: 8px; background: var(--text-muted); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }}
+        .dot:nth-child(1) {{ animation-delay: -0.32s; }}
+        .dot:nth-child(2) {{ animation-delay: -0.16s; }}
+        @keyframes bounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
+
+        @media (max-width: 768px) {{
+            .container {{ grid-template-columns: 1fr; padding: 1rem; }}
+            .sidebar {{ position: static; display: flex; overflow-x: auto; padding-bottom: 1rem; }}
+            .tab-btn {{ white-space: nowrap; width: auto; margin-right: 0.5rem; margin-bottom: 0; }}
         }}
     </style>
 </head>
 <body>
-    <div class="hero">
-        <h1>🎯 Interview Practice Portal</h1>
-        <p class="subtitle">{company} — {role}</p>
-    </div>
+    <nav class="navbar">
+        <div class="brand">OrchestrAI Prep</div>
+        <div class="nav-role">{company} • {role}</div>
+    </nav>
 
     <div class="container">
-        <!-- Section 1: Interview Questions & Answers -->
-        <div class="section">
-            <h2 class="section-title">📋 Interview Questions & Answers</h2>
-            {qa_html}
-        </div>
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <button class="tab-btn active" onclick="switchTab('tab-qa', this)">
+                📚 Interview Q&A
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-intro', this)">
+                🎤 HR Introduction
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-trans', this)">
+                🌐 Tamil Translaton
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-speak', this)">
+                🗣️ English Clinic
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-res', this)">
+                💻 Tools & Courses
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-coach', this)" style="border: 1px solid rgba(99,102,241,0.3); background: rgba(99,102,241,0.05); margin-top: 1rem;">
+                🤖 Live AI Coach <span style="font-size: 8px; color: #10b981;">●</span>
+            </button>
+        </aside>
 
-        <!-- Section 2: HR Introduction -->
-        <div class="section">
-            <h2 class="section-title">🎤 HR Introduction</h2>
-            <div class="intro-box">{hr_intro}</div>
-        </div>
-
-        <!-- Section 3: Tamil → English Translator -->
-        <div class="section">
-            <h2 class="section-title">🌐 Tamil → English Interview Translator</h2>
-            {trans_html}
-        </div>
-
-        <!-- Section 4: English Speaking Practice -->
-        <div class="section">
-            <h2 class="section-title">🗣 English Speaking Practice</h2>
-            <div class="card">
-                <h3 style="color:#c4b5fd; margin-bottom:12px;">Practice Sentences</h3>
-                <ul>{sentences_html}</ul>
-            </div>
-            <div class="card">
-                <h3 style="color:#86efac; margin-bottom:12px;">Confidence Tips</h3>
-                <ul>{tips_html}</ul>
-            </div>
-        </div>
-
-        <!-- Section 5: Coding Practice Sheets -->
-        <div class="section">
-            <h2 class="section-title">💻 Coding Practice Sheets</h2>
-            {sheets_html}
-        </div>
-
-        <!-- Section 6: Project Recommendations -->
-        <div class="section">
-            <h2 class="section-title">🚀 Project Recommendations</h2>
-            {projects_html}
-        </div>
-
-        <!-- Section 7: Course Recommendations -->
-        <div class="section">
-            <h2 class="section-title">📚 Course Recommendations</h2>
-            {courses_html}
-        </div>
-
-        <!-- Section 8: Interactive Interview Coach -->
-        <div class="section" id="interactive-coach">
-            <h2 class="section-title">🤖 Real-Time Interview Coach</h2>
-            <p class="section-subtitle">Ask me anything in <strong>Tamil</strong> or <strong>English</strong> — I'll give you a professional, interview-ready answer instantly.</p>
-
-            <div class="coach-box">
-                <textarea
-                    id="questionInput"
-                    class="coach-input"
-                    rows="4"
-                    placeholder="Type your question here... e.g. 'HR kita epdi sollanum nan fresher nu' or 'How do I explain my projects?'"
-                    maxlength="2000"
-                ></textarea>
-                <div class="coach-meta">
-                    <span id="charCount" class="char-count">0 / 2000</span>
-                    <button id="askBtn" class="ask-btn" onclick="askCoach()">
-                        <span id="askBtnText">🎯 Ask Coach</span>
-                    </button>
-                </div>
-                <div id="langBadge" class="lang-badge" style="display:none;"></div>
+        <!-- Main Content Area -->
+        <main class="content-area">
+            
+            <!-- TAB 1: Q&A -->
+            <div id="tab-qa" class="tab-pane active">
+                <h1 class="page-title">Role-Specific Questions</h1>
+                <p class="page-subtitle">10 personalized questions based on the {role} role and your resume skills.</p>
+                {qa_html}
             </div>
 
-            <div id="coachResponse" class="coach-response" style="display:none;">
-                <div class="response-panel professional-panel">
-                    <div class="panel-header">💼 Professional Interview Answer</div>
-                    <div id="professionalAnswer" class="panel-content"></div>
-                </div>
-                <div class="response-panel practice-panel">
-                    <div class="panel-header">🗣️ Practice Version (Simple English)</div>
-                    <div id="practiceVersion" class="panel-content"></div>
-                </div>
-                <div class="response-panel tips-panel">
-                    <div class="panel-header">⚡ Confidence Tips</div>
-                    <ul id="confidenceTips" class="tips-list"></ul>
+            <!-- TAB 2: HR Intro -->
+            <div id="tab-intro" class="tab-pane">
+                <h1 class="page-title">Personalized Introduction</h1>
+                <p class="page-subtitle">A natural 90-second pitch specifically tailored to {company}. Memorize this flow.</p>
+                <div class="card intro-box">
+                    "{hr_intro}"
                 </div>
             </div>
 
-            <div id="coachError" class="coach-error" style="display:none;"></div>
-            <div id="loadingSpinner" class="loading-spinner" style="display:none;">
-                <div class="spinner"></div>
-                <span>Gemini AI is thinking...</span>
+            <!-- TAB 3: Translater -->
+            <div id="tab-trans" class="tab-pane">
+                <h1 class="page-title">Tamil to English Guide</h1>
+                <p class="page-subtitle">Common interview phrases translated into professional and simple English.</p>
+                <div class="card" style="padding: 2rem;">
+                    {trans_html}
+                </div>
             </div>
 
-            <style>
-                .section-subtitle {{ color: #a0b0c8; margin-bottom: 1.5rem; font-size: 0.95rem; }}
-                .coach-box {{ background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; }}
-                .coach-input {{
-                    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
-                    border-radius: 12px; color: #e0e0e0; padding: 1rem; font-size: 1rem;
-                    font-family: 'Inter', sans-serif; resize: vertical; transition: border 0.2s;
-                }}
-                .coach-input:focus {{ outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2); }}
-                .coach-meta {{ display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; }}
-                .char-count {{ color: #6b7a99; font-size: 0.8rem; }}
-                .ask-btn {{
-                    background: linear-gradient(135deg, #667eea, #764ba2); color: white;
-                    border: none; padding: 0.7rem 2rem; border-radius: 50px; cursor: pointer;
-                    font-size: 0.95rem; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif;
-                }}
-                .ask-btn:hover {{ transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }}
-                .ask-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
-                .lang-badge {{ display: inline-block; padding: 0.3rem 0.9rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; margin-top: 0.5rem; }}
-                .lang-tamil {{ background: rgba(255,107,107,0.2); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }}
-                .lang-english {{ background: rgba(102,234,175,0.2); color: #66eaaf; border: 1px solid rgba(102,234,175,0.3); }}
-                .coach-response {{ margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; animation: slideIn 0.4s ease; }}
-                @keyframes slideIn {{ from {{ opacity:0; transform:translateY(10px); }} to {{ opacity:1; transform:translateY(0); }} }}
-                .response-panel {{ background: rgba(255,255,255,0.05); border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }}
-                .professional-panel {{ border-left: 3px solid #667eea; }}
-                .practice-panel {{ border-left: 3px solid #66eaaf; }}
-                .tips-panel {{ border-left: 3px solid #f7dc6f; }}
-                .panel-header {{ background: rgba(255,255,255,0.05); padding: 0.75rem 1.25rem; font-weight: 600; font-size: 0.9rem; color: #c0cfe8; }}
-                .panel-content {{ padding: 1.25rem; color: #d0dff0; line-height: 1.7; font-size: 0.95rem; }}
-                .tips-list {{ padding: 1.25rem 1.25rem 1.25rem 2rem; margin: 0; color: #d0dff0; line-height: 1.8; }}
-                .tips-list li {{ margin-bottom: 0.3rem; }}
-                .coach-error {{ background: rgba(255,82,82,0.1); border: 1px solid rgba(255,82,82,0.3); color: #ff8080; padding: 1rem; border-radius: 12px; margin-top: 1rem; }}
-                .loading-spinner {{ display: flex; align-items: center; gap: 1rem; margin-top: 1rem; color: #a0b0c8; }}
-                .spinner {{ width: 24px; height: 24px; border: 3px solid rgba(102,126,234,0.3); border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }}
-                @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
-            </style>
+            <!-- TAB 4: Speaking -->
+            <div id="tab-speak" class="tab-pane">
+                <h1 class="page-title">Communication Clinic</h1>
+                <p class="page-subtitle">Role-specific vocabulary and actionable confidence tips.</p>
+                <div class="grid-2">
+                    <div>
+                        <h3 style="color:#a5b4fc; margin-bottom:1rem; font-size:0.9rem; text-transform:uppercase;">Vocabulary</h3>
+                        {sentences_html}
+                    </div>
+                    <div>
+                        <h3 style="color:#fcd34d; margin-bottom:1rem; font-size:0.9rem; text-transform:uppercase;">Delivery Tips</h3>
+                        {tips_html}
+                    </div>
+                </div>
+            </div>
 
-            <script>
-                const COMPANY_SLUG = "{_slugify(company)}";
-                const ROLE_SLUG    = "{_slugify(role)}";
-                const API_BASE     = "http://localhost:8000";
+            <!-- TAB 5: Resources -->
+            <div id="tab-res" class="tab-pane">
+                <h1 class="page-title">Preparation Resources</h1>
+                <p class="page-subtitle">Hand-picked coding rounds, architectural gaps, and upskilling courses.</p>
+                
+                <h3 style="margin-bottom: 1rem; margin-top: 0;">Interactive Practice</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 2.5rem;">
+                    {sheets_html}
+                </div>
 
-                const questionInput = document.getElementById("questionInput");
-                questionInput.addEventListener("input", () => {{
-                    document.getElementById("charCount").textContent = questionInput.value.length + " / 2000";
-                }});
+                <div class="grid-2">
+                    <div>
+                        <h3 style="margin-bottom: 1rem;">Missing Skills Projects</h3>
+                        {projects_html}
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 1.5rem; margin-top: 0;">Recommended Courses</h3>
+                        {courses_html}
+                    </div>
+                </div>
+            </div>
 
-                async function askCoach() {{
-                    const question = questionInput.value.trim();
-                    if (!question) {{
-                        showError("Please type a question before submitting.");
-                        return;
-                    }}
+            <!-- TAB 6: Live Coach -->
+            <div id="tab-coach" class="tab-pane">
+                <h1 class="page-title">Interactive Interview Coach</h1>
+                <p class="page-subtitle">Ask anything in English or Tamil. Get instant, production-ready responses.</p>
+                
+                <div class="coach-container">
+                    <div class="coach-header">
+                        <div class="coach-avatar">🤖</div>
+                        <div class="coach-status">
+                            <span class="coach-name">OrchestrAI Mentor</span>
+                            <span class="coach-online">Online for {company} prep</span>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-history" id="chatbox">
+                        <div class="msg-ai">
+                            Hi! I've analyzed the {role} role at {company} and your resume. What interview question are you struggling with? You can ask me in Tamil too!
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-area">
+                        <textarea id="aiInput" class="chat-textarea" rows="1" placeholder="Type a question... (Enter to send)"></textarea>
+                        <button id="sendBtn" class="chat-btn" onclick="sendMessage()">
+                            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                    // Reset UI
-                    document.getElementById("coachError").style.display = "none";
-                    document.getElementById("coachResponse").style.display = "none";
-                    document.getElementById("loadingSpinner").style.display = "flex";
-                    document.getElementById("askBtn").disabled = true;
-                    document.getElementById("askBtnText").textContent = "⏳ Thinking...";
-
-                    try {{
-                        const res = await fetch(`${{API_BASE}}/practice/${{COMPANY_SLUG}}/${{ROLE_SLUG}}/ask`, {{
-                            method: "POST",
-                            headers: {{ "Content-Type": "application/json" }},
-                            body: JSON.stringify({{ question }})
-                        }});
-
-                        if (!res.ok) {{
-                            const err = await res.json();
-                            throw new Error(err.detail || "API error " + res.status);
-                        }}
-
-                        const data = await res.json();
-
-                        // Populate panels
-                        document.getElementById("professionalAnswer").textContent = data.professional_answer;
-                        document.getElementById("practiceVersion").textContent    = data.practice_version;
-
-                        const tipsList = document.getElementById("confidenceTips");
-                        tipsList.innerHTML = "";
-                        (data.confidence_tips || []).forEach(tip => {{
-                            const li = document.createElement("li");
-                            li.textContent = tip;
-                            tipsList.appendChild(li);
-                        }});
-
-                        // Language badge
-                        const badge = document.getElementById("langBadge");
-                        badge.textContent = data.detected_language === "Tamil"
-                            ? "🇮🇳 Tamil detected — translated to professional English"
-                            : "🇬🇧 English detected";
-                        badge.className = "lang-badge " + (data.detected_language === "Tamil" ? "lang-tamil" : "lang-english");
-                        badge.style.display = "inline-block";
-
-                        document.getElementById("coachResponse").style.display = "flex";
-
-                    }} catch (err) {{
-                        showError("❌ " + err.message + ". Make sure the OrchestrAI server is running (uvicorn backend.server:app --port 8000).");
-                    }} finally {{
-                        document.getElementById("loadingSpinner").style.display = "none";
-                        document.getElementById("askBtn").disabled = false;
-                        document.getElementById("askBtnText").textContent = "🎯 Ask Coach";
-                    }}
-                }}
-
-                function showError(msg) {{
-                    const el = document.getElementById("coachError");
-                    el.textContent = msg;
-                    el.style.display = "block";
-                }}
-
-                // Allow Enter to submit (Shift+Enter for newline)
-                questionInput.addEventListener("keydown", (e) => {{
-                    if (e.key === "Enter" && !e.shiftKey) {{
-                        e.preventDefault();
-                        askCoach();
-                    }}
-                }});
-            </script>
-        </div>
-
+        </main>
     </div>
 
-    <div class="footer">
-        OrchestrAI Practice Portal &bull; Generated on {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}
-    </div>
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabId, btnElement) {{
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btnElement.classList.add('active');
+            window.scrollTo(0,0);
+        }}
+
+        // Auto-resize textarea
+        const aiInput = document.getElementById('aiInput');
+        aiInput.addEventListener('input', function() {{
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        }});
+
+        aiInput.addEventListener('keydown', function(e) {{
+            if (e.key === 'Enter' && !e.shiftKey) {{
+                e.preventDefault();
+                sendMessage();
+            }}
+        }});
+
+        // Live Chat Logic
+        const COMPANY_SLUG = "{_slugify(company)}";
+        const ROLE_SLUG = "{_slugify(role)}";
+        const API_BASE = "http://localhost:8000";
+
+        async function sendMessage() {{
+            const val = aiInput.value.trim();
+            if(!val) return;
+
+            const chatbox = document.getElementById('chatbox');
+            const btn = document.getElementById('sendBtn');
+            
+            // Add User Msg
+            const uDiv = document.createElement('div');
+            uDiv.className = 'msg-user';
+            uDiv.textContent = val;
+            chatbox.appendChild(uDiv);
+            
+            aiInput.value = '';
+            aiInput.style.height = 'auto';
+            btn.disabled = true;
+            aiInput.disabled = true;
+
+            // Add Typing Indicator
+            const tDiv = document.createElement('div');
+            tDiv.className = 'typing-indicator';
+            tDiv.id = 'typingBubble';
+            tDiv.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+            chatbox.appendChild(tDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+
+            try {{
+                const res = await fetch(`${{API_BASE}}/practice/${{COMPANY_SLUG}}/${{ROLE_SLUG}}/ask`, {{
+                    method: 'POST',
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify({{question: val}})
+                }});
+
+                document.getElementById('typingBubble').remove();
+
+                if(!res.ok) throw new Error("API Limit Reached or Offline.");
+                
+                const data = await res.json();
+                
+                const aiDiv = document.createElement('div');
+                aiDiv.className = 'msg-ai';
+                
+                let tipsHtml = '';
+                if(data.confidence_tips && data.confidence_tips.length > 0) {{
+                    tipsHtml = '<div class="ai-chunk"><div class="ai-label">⚡ Confidence Tips</div><ul class="tips-ul">' + 
+                               data.confidence_tips.map(t => `<li>${{t}}</li>`).join('') + '</ul></div>';
+                }}
+
+                aiDiv.innerHTML = `
+                    ${{data.detected_language === 'Tamil' ? `<div class="ai-chunk" style="font-size:0.8rem; color:var(--text-muted);"><em>Translated from Tamil</em></div>` : ''}}
+                    <div class="ai-chunk">
+                        <div class="ai-label">💼 Professional Answer</div>
+                        <div style="line-height:1.7;">${{data.professional_answer}}</div>
+                    </div>
+                    <div class="ai-chunk" style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid rgba(255,255,255,0.1);">
+                        <div class="ai-label">🗣️ Simple Practice Version</div>
+                        <div style="line-height:1.7;">${{data.practice_version}}</div>
+                    </div>
+                    ${{tipsHtml}}
+                `;
+                chatbox.appendChild(aiDiv);
+
+            }} catch(e) {{
+                document.getElementById('typingBubble')?.remove();
+                const errDiv = document.createElement('div');
+                errDiv.className = 'msg-ai';
+                errDiv.style.borderLeft = '3px solid var(--err)';
+                errDiv.innerHTML = `<strong>Error:</strong> Failed to reach OrchestrAI backend. Make sure: <br>1. Local FastAPI is running on port 8000.<br>2. You have not hit the Gemini Free Tier 15 RPM limit.`;
+                chatbox.appendChild(errDiv);
+            }} finally {{
+                btn.disabled = false;
+                aiInput.disabled = false;
+                aiInput.focus();
+                chatbox.scrollTop = chatbox.scrollHeight;
+            }}
+        }}
+    </script>
 </body>
 </html>"""
     return html
