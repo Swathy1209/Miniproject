@@ -235,18 +235,18 @@ def run_orchestrai_pipeline():
     </html>
     """
 
-    # STEP 7: Delay sending email until exactly 11:30 AM IST
+    # STEP 7: Delay sending email until exactly 12:30 PM IST
     import time
     from zoneinfo import ZoneInfo
     now = datetime.now(ZoneInfo('Asia/Kolkata'))
-    target = now.replace(hour=11, minute=30, second=0, microsecond=0)
+    target = now.replace(hour=12, minute=30, second=0, microsecond=0)
     
     if now < target:
         sleep_seconds = (target - now).total_seconds()
-        logging.info(f"Pipeline finished early. Waiting {sleep_seconds:.1f} seconds to send email at exactly 11:30 AM IST.")
+        logging.info(f"Pipeline finished early. Waiting {sleep_seconds:.1f} seconds to send email at exactly 12:30 PM IST.")
         time.sleep(sleep_seconds)
     else:
-        logging.info("Current time is past 11:30 AM IST, sending email immediately.")
+        logging.info("Current time is past 12:30 PM IST, sending email immediately.")
 
     # Actually send email
     send_email(
