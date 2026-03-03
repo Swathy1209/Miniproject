@@ -3,7 +3,7 @@ name: OrchestrAI Career Agent Daily Run
 
 on:
   schedule:
-    - cron: "15 5 * * *"
+    - cron: "0 4 * * *"  # 4:00 AM UTC -> 9:30 AM IST
   workflow_dispatch:
 
 jobs:
@@ -17,6 +17,7 @@ jobs:
       GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
       GITHUB_REPO:     ${{ secrets.GH_REPO }}
       GITHUB_BRANCH:   main
+      GEMINI_API_KEY:  ${{ secrets.GEMINI_API_KEY }}
       OPENAI_API_KEY:  ${{ secrets.OPENAI_API_KEY }}
       EMAIL_USER:      ${{ secrets.EMAIL_USER }}
       EMAIL_PASS:      ${{ secrets.EMAIL_PASS }}
