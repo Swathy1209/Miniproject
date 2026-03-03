@@ -3,7 +3,7 @@ name: OrchestrAI Career Agent Daily Run
 
 on:
   schedule:
-    - cron: "0 4 * * *"  # 4:00 AM UTC -> 9:30 AM IST
+    - cron: "45 5 * * *"  # 5:45 AM UTC -> 11:15 AM IST
   workflow_dispatch:
 
 jobs:
