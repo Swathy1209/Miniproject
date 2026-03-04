@@ -14,7 +14,7 @@ import sys
 from datetime import datetime
 from zoneinfo import ZoneInfo  # Python 3.9+
 
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, JobExecutionEvent
 
@@ -27,9 +27,9 @@ IST = ZoneInfo("Asia/Kolkata")
 # Scheduler factory
 # ──────────────────────────────────────────────
 
-def _build_scheduler() -> BlockingScheduler:
-    """Create a BlockingScheduler configured for IST timezone."""
-    scheduler = BlockingScheduler(timezone=IST)
+def _build_scheduler() -> BackgroundScheduler:
+    """Create a BackgroundScheduler configured for IST timezone."""
+    scheduler = BackgroundScheduler(timezone=IST)
     return scheduler
 
 
@@ -83,14 +83,14 @@ def schedule_daily_internship_email(job_func, hour: int = 10, minute: int = 45) 
         minute,
     )
 
-    # Graceful shutdown on SIGINT / SIGTERM
-    def _shutdown(signum, frame):  # noqa: ANN001
-        logger.info("Scheduler: Signal %s received — shutting down.", signum)
-        scheduler.shutdown(wait=False)
-        sys.exit(0)
+    # Graceful shutdown on SIGINT / SIGTERM handled natively by Uvicorn now
+    # def _shutdown(signum, frame):  # noqa: ANN001
+    #     logger.info("Scheduler: Signal %s received — shutting down.", signum)
+    #     scheduler.shutdown(wait=False)
+    #     sys.exit(0)
 
-    signal.signal(signal.SIGINT, _shutdown)
-    signal.signal(signal.SIGTERM, _shutdown)
+    # signal.signal(signal.SIGINT, _shutdown)
+    # signal.signal(signal.SIGTERM, _shutdown)
 
     logger.info("Scheduler: Starting. Press Ctrl+C to stop.")
     scheduler.start()
