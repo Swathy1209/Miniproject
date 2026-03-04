@@ -47,7 +47,7 @@ def run_full_pipeline():
 _check_env()
 
 # ── FastAPI Web Server Setup ───────────────────────────────────────────────
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
@@ -85,7 +85,13 @@ def start_scheduler():
     
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return "<h1>OrchestrAI Hosted on Render 🚀</h1><p>Agent static files are ready.</p>"
+    return "<h1>OrchestrAI Hosted on Render 🚀</h1><p>Agent static files are ready.</p><p><a href='/trigger'>Click here to manually trigger the email pipeline</a></p>"
+
+@app.get("/trigger", response_class=HTMLResponse)
+def trigger_pipeline(background_tasks: BackgroundTasks):
+    logger.info("Manual HTTP trigger: running full pipeline in background...")
+    background_tasks.add_task(run_full_pipeline)
+    return "<h1>Pipeline Triggered! 🚀</h1><p>The AI agents are running in the background. Please check your Render logs! The email will arrive in your inbox in 5-10 minutes once all 100+ jobs and portfolios are processed.</p>"
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--now":
