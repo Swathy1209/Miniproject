@@ -22,7 +22,7 @@ logger = logging.getLogger("OrchestrAI.AIEngine")
 
 OPENAI_API_KEY: str = os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", ""))
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.0-flash"
 
 # ── Known technical skill keywords for fallback extraction ────────────────────
 _KNOWN_SKILLS: list[str] = [

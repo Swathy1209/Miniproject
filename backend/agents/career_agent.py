@@ -576,7 +576,7 @@ def _is_relevant_via_ai(job: dict) -> bool:
 
     try:
         response = openai_client.chat.completions.create(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             messages=[
                 {
                     "role": "system",

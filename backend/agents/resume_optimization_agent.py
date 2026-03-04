@@ -84,7 +84,7 @@ def extract_skills_from_pdf(local_path: str = "temp_resume.pdf") -> list[str]:
 
         prompt = f"Extract a comma-separated list of technical skills, tools, and technologies from the following resume text:\n\n{text}"
         response = openai_client.chat.completions.create(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=200,
             temperature=0.2
@@ -133,7 +133,7 @@ def generate_suggestions(job: dict, resume_skills: list[str], missing_skills: li
             f"Do not include conversational filler."
         )
         response = openai_client.chat.completions.create(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash",
             messages=[
                 {"role": "system", "content": "You are an expert resume optimizer. Return ONLY the bullet points."},
                 {"role": "user", "content": prompt}

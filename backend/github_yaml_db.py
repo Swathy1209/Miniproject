@@ -77,6 +77,11 @@ def _yaml_dumps(data: Any) -> str:
 # ── Internal Local Space helpers ───────────────────────────────────────────────
 
 DATA_DIR = os.getenv("DATA_DIR", ".")
+try:
+    os.makedirs(os.path.join(DATA_DIR, "database"), exist_ok=True)
+except PermissionError:
+    DATA_DIR = "./data"
+    os.makedirs(os.path.join(DATA_DIR, "database"), exist_ok=True)
 
 def _auth_headers() -> dict[str, str]:
     return {}
