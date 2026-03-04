@@ -182,7 +182,7 @@ def save_optimized_resume_to_github(company: str, role: str, suggestions: list[s
             f"feat: generate optimized resume for {company} {role} — {ts}"
         )
         
-        base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
         return f"{base_url}/{file_path}"
     except Exception as exc:
         logger.error("ResumeOptimizationAgent: save_optimized_resume_to_github failed - %s", exc)

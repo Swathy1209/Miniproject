@@ -73,7 +73,7 @@ def _slugify(text: str) -> str:
 
 def _get_public_url(file_path: str) -> str:
     """Helper to cleanly build the final public URL."""
-    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
     return f"{base_url}/{file_path}"
 
 

@@ -123,7 +123,7 @@ def save_cover_letter_to_github(company: str, role: str, letter_text: str) -> st
         )
         
         # Build public URL
-        base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
         return f"{base_url}/{file_path}"
     except Exception as exc:
         logger.error("CoverLetterAgent: save_cover_letter_to_github failed - %s", exc)

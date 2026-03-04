@@ -41,7 +41,7 @@ PORTFOLIO_FILE = "database/portfolio.yaml"
 SECURITY_REPORTS_FILE = "database/security_reports.yaml"
 
 def _get_public_url(file_path: str) -> str:
-    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
     # For a directory mount with html=True in FastAPI, it works nicely to point directly to the HTML file or the enclosing dir.
     # To keep it completely in sync with the user spec: /portfolio
     return f"{base_url}/portfolio/"
