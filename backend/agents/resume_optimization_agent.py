@@ -54,20 +54,16 @@ OPTIMIZATIONS_FILE = "database/resume_optimizations.yaml"
 
 def download_resume_pdf(repo_path: str = "resumes/swathiga_resume.pdf", local_path: str = "temp_resume.pdf") -> bool:
     try:
-        source_repo_slug = "Swathy1209/orchestrai-agent"
-        url = f"https://api.github.com/repos/{source_repo_slug}/contents/{repo_path}"
-        resp = requests.get(url, headers=_auth_headers(), params={"ref": GITHUB_BRANCH}, timeout=15)
-        if resp.status_code == 200:
-            content_b64 = resp.json().get("content", "")
-            with open(local_path, "wb") as f:
-                f.write(base64.b64decode(content_b64))
-            logger.info("ResumeOptimizationAgent: Downloaded resume from %s", repo_path)
+        import shutil
+        if os.path.exists(repo_path):
+            shutil.copy2(repo_path, local_path)
+            logger.info("ResumeOptimizationAgent: Copied resume from %s", repo_path)
             return True
         else:
-            logger.warning("ResumeOptimizationAgent: Could not download resume from %s (Status: %d)", repo_path, resp.status_code)
+            logger.warning("ResumeOptimizationAgent: Could not find resume at %s", repo_path)
             return False
     except Exception as exc:
-        logger.error("ResumeOptimizationAgent: download_resume_pdf failed - %s", exc)
+        logger.error("ResumeOptimizationAgent: copy_resume_pdf failed - %s", exc)
         return False
 
 def extract_skills_from_pdf(local_path: str = "temp_resume.pdf") -> list[str]:
@@ -186,9 +182,8 @@ def save_optimized_resume_to_github(company: str, role: str, suggestions: list[s
             f"feat: generate optimized resume for {company} {role} — {ts}"
         )
         
-        repo_slug = GITHUB_REPO if "/" in GITHUB_REPO else f"{GITHUB_USERNAME}/{GITHUB_REPO}"
-        github_link = f"https://github.com/{repo_slug}/blob/main/{file_path}"
-        return github_link
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
+        return f"{base_url}/{file_path}"
     except Exception as exc:
         logger.error("ResumeOptimizationAgent: save_optimized_resume_to_github failed - %s", exc)
         return ""

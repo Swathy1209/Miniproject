@@ -74,68 +74,29 @@ def _yaml_dumps(data: Any) -> str:
     )
 
 
-# ── Internal GitHub REST helpers ───────────────────────────────────────────────
+# ── Internal Local Space helpers ───────────────────────────────────────────────
+
+DATA_DIR = os.getenv("DATA_DIR", ".")
 
 def _auth_headers() -> dict[str, str]:
-    """Authenticated headers for GitHub API."""
-    if not GITHUB_TOKEN:
-        raise EnvironmentError(
-            "GITHUB_TOKEN is not set. Add it to your .env file."
-        )
-    return {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-
+    return {}
 
 def _get_raw_file(file_path: str) -> tuple[str, str]:
-    """
-    GET /repos/{owner}/{repo}/contents/{file_path}
-
-    Returns (raw_text_content, sha).
-    sha is "" when the file does not exist yet (404).
-    """
-    url = f"{_BASE_URL}/repos/{_REPO_SLUG}/contents/{file_path}"
-    resp = requests.get(
-        url,
-        headers=_auth_headers(),
-        params={"ref": GITHUB_BRANCH},
-        timeout=15,
-    )
-
-    if resp.status_code == 404:
-        logger.info("GitHubYAMLDB: '%s' does not exist yet — will create.", file_path)
+    full_path = os.path.join(DATA_DIR, file_path)
+    if not os.path.exists(full_path):
+        logger.info("LocalDB: '%s' does not exist yet — will create.", file_path)
         return "", ""
 
-    resp.raise_for_status()
-    data = resp.json()
-    raw = base64.b64decode(data["content"]).decode("utf-8")
-    sha = data.get("sha", "")
-    return raw, sha
-
+    with open(full_path, "r", encoding="utf-8") as f:
+        raw = f.read()
+    return raw, ""
 
 def _put_raw_file(file_path: str, text: str, sha: str, commit_msg: str) -> bool:
-    """
-    PUT /repos/{owner}/{repo}/contents/{file_path}
-
-    Creates or updates a file. Pass sha="" for brand-new files.
-    Returns True on success, raises on failure.
-    """
-    url = f"{_BASE_URL}/repos/{_REPO_SLUG}/contents/{file_path}"
-    encoded = base64.b64encode(text.encode("utf-8")).decode("ascii")
-
-    payload: dict[str, Any] = {
-        "message": commit_msg,
-        "content": encoded,
-        "branch":  GITHUB_BRANCH,
-    }
-    if sha:
-        payload["sha"] = sha  # required for updates; omit for creates
-
-    resp = requests.put(url, headers=_auth_headers(), json=payload, timeout=20)
-    resp.raise_for_status()
-    logger.info("GitHubYAMLDB: '%s' committed — %s", file_path, commit_msg)
+    full_path = os.path.join(DATA_DIR, file_path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, "w", encoding="utf-8") as f:
+        f.write(text)
+    logger.info("LocalDB: '%s' saved — %s", file_path, commit_msg)
     return True
 
 

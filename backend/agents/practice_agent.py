@@ -71,9 +71,10 @@ def _slugify(text: str) -> str:
     return text.strip('_')
 
 
-def _get_github_url(file_path: str) -> str:
-    """Use raw.githack.com which serves files with correct Content-Type headers."""
-    return f"https://raw.githack.com/{_REPO_SLUG}/main/{file_path}"
+def _get_public_url(file_path: str) -> str:
+    """Helper to cleanly build the final public URL."""
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
+    return f"{base_url}/{file_path}"
 
 
 import time
@@ -1082,7 +1083,7 @@ def _render_practice_html(
         // Live Chat Logic
         const COMPANY_SLUG = "{_slugify(company)}";
         const ROLE_SLUG = "{_slugify(role)}";
-        const API_BASE = "http://localhost:8000";
+        const API_BASE = window.location.origin;
 
         async function sendMessage() {{
             const val = aiInput.value.trim();
@@ -1151,7 +1152,7 @@ def _render_practice_html(
                 const errDiv = document.createElement('div');
                 errDiv.className = 'msg-ai';
                 errDiv.style.borderLeft = '3px solid var(--err)';
-                errDiv.innerHTML = `<strong>Error:</strong> Failed to reach OrchestrAI backend. Make sure: <br>1. Local FastAPI is running on port 8000.<br>2. You have not hit the Gemini Free Tier 15 RPM limit.`;
+                errDiv.innerHTML = `<strong>Error:</strong> Failed to reach OrchestrAI backend. Make sure: <br>1. API Server is running.<br>2. You have not hit the Gemini Free Tier 15 RPM limit.`;
                 chatbox.appendChild(errDiv);
             }} finally {{
                 btn.disabled = false;
@@ -1167,11 +1168,11 @@ def _render_practice_html(
 
 
 # ==============================================================================
-# FEATURE 8 (cont.) — Upload HTML to GitHub
+# FEATURE 8 (cont.) — Upload HTML to Public Path
 # ==============================================================================
 
 def save_practice_html_to_github(company: str, role: str, html_content: str) -> str:
-    """Upload the rendered HTML practice page to GitHub. Returns public raw URL."""
+    """Save the rendered HTML practice page locally. Returns public URL."""
     file_name = f"{_slugify(company)}_{_slugify(role)}.html"
     file_path = f"frontend/practice/{file_name}"
 
@@ -1184,7 +1185,7 @@ def save_practice_html_to_github(company: str, role: str, html_content: str) -> 
             sha,
             f"feat: generate practice portal for {company} {role} — {ts}",
         )
-        return _get_github_url(file_path)
+        return _get_public_url(file_path)
     except Exception as exc:
         logger.error("PracticeAgent: save_practice_html_to_github failed — %s", exc)
         return ""

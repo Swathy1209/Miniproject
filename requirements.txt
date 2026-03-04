@@ -12,8 +12,10 @@ pyyaml>=6.0.1              # YAML read/write for GitHub cloud database
 # ── AI Relevance Filter ───────────────────────────────────────
 openai>=1.30.0             # OpenAI API client (GPT-3.5-turbo relevance filter)
 
-# ── Scheduling ────────────────────────────────────────────────
+# ── Scheduling & Web ────────────────────────────────────────────────
 APScheduler>=3.10.4        # Cron-based scheduler (9:30 AM IST daily)
+fastapi>=0.111.0           # Web Server framework to serve resulting files locally on Render
+uvicorn>=0.30.1            # ASGI Server to run FastAPI
 
 # ── GitHub REST API ───────────────────────────────────────────
 requests>=2.31.0           # Synchronous GitHub API calls (github_yaml_db.py)

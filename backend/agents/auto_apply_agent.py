@@ -42,10 +42,10 @@ JOBS_FILE = "database/jobs.yaml"
 COVER_LETTERS_FILE = "database/cover_letter_index.yaml"
 APP_PACKAGES_DB_FILE = "database/application_packages.yaml"
 
-def get_github_url(file_path: str) -> str:
-    """Helper to cleanly build the final raw GitHub content URL."""
-    repo_slug = GITHUB_REPO if "/" in GITHUB_REPO else f"{GITHUB_USERNAME}/{GITHUB_REPO}"
-    return f"https://raw.githubusercontent.com/{repo_slug}/main/{file_path}"
+def get_public_url(file_path: str) -> str:
+    """Helper to cleanly build the final public URL."""
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
+    return f"{base_url}/{file_path}"
 
 def read_jobs() -> list[dict]:
     try:
@@ -77,44 +77,13 @@ def copy_resume_to_app_packages(repo_path: str = "resumes/swathiga_resume.pdf") 
     new_path = "application_packages/resume.pdf"
     
     try:
-        source_repo_slug = "Swathy1209/orchestrai-agent"
-        target_repo_slug = GITHUB_REPO if "/" in GITHUB_REPO else f"{GITHUB_USERNAME}/{GITHUB_REPO}"
-        
-        url = f"https://api.github.com/repos/{source_repo_slug}/contents/{repo_path}"
-        resp = requests.get(url, headers=_auth_headers(), params={"ref": GITHUB_BRANCH}, timeout=15)
-        
-        if resp.status_code == 200:
-            content_b64 = resp.json().get("content", "")
-            if not content_b64:
-                return ""
-                
-            # decode it back to bytes to pass correctly into the put_raw_file architecture
-            # Alternatively we could just copy it using the github API, but let's use our built-in writer
-            decoded_bytes = base64.b64decode(content_b64)
-            # Since _put_raw_file requires text, we bypass it for binary upload.
-            
-            put_url = f"https://api.github.com/repos/{target_repo_slug}/contents/{new_path}"
-            headers = _auth_headers()
-            
-            # check if exists to get sha
-            get_resp = requests.get(put_url, headers=headers)
-            sha = get_resp.json().get("sha") if get_resp.status_code == 200 else None
-            
-            payload = {
-                "message": "feat: prepare application package resume",
-                "content": content_b64, 
-                "branch": GITHUB_BRANCH
-            }
-            if sha:
-                payload["sha"] = sha
-                
-            put_resp = requests.put(put_url, headers=headers, json=payload, timeout=20)
-            put_resp.raise_for_status()
-            
-            # return public raw link
-            return get_github_url(new_path)
+        import shutil
+        os.makedirs(os.path.dirname(new_path), exist_ok=True)
+        if os.path.exists(repo_path):
+            shutil.copy2(repo_path, new_path)
+            return get_public_url(new_path)
         else:
-            logger.warning("AutoApplyAgent: Could not download resume from %s (Status: %d)", repo_path, resp.status_code)
+            logger.warning("AutoApplyAgent: Could not find local resume at %s", repo_path)
             return ""
     except Exception as exc:
         logger.error("AutoApplyAgent: copy_resume_to_app_packages failed - %s", exc)
@@ -158,7 +127,7 @@ Status:
             sha,
             f"feat: generate application package for {company} {role} — {ts}"
         )
-        return get_github_url(file_path)
+        return get_public_url(file_path)
     except Exception as exc:
         logger.error("AutoApplyAgent: create_markdown_package failed - %s", exc)
         return ""
