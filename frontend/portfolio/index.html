@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant - Portfolio</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #cbd5e1;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            padding: 4rem 1rem;
+            border-bottom: 1px solid #334155;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .summary {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 2rem auto;
+        }
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .skill-badge {
+            background: #334155;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        section {
+            padding: 4rem 0;
+        }
+        section h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--accent);
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .project-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+        .project-card h3 { margin-top: 0; margin-bottom: 0.5rem; }
+        .project-card .tech {
+            color: #60a5fa;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .project-card .impact {
+            font-size: 0.9rem;
+            color: #a78bfa;
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+        .card-footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            align-items: center;
+        }
+        .gh-btn, .demo-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gh-btn {
+            background: #334155;
+            color: white;
+            border: 1px solid #475569;
+        }
+        .gh-btn:hover { background: #475569; }
+        .demo-btn {
+            background: var(--accent);
+            color: white;
+        }
+        .demo-btn:hover { background: var(--accent-hover); }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid #334155;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Applicant</h1>
+            <p class="summary">I am a passionate software engineer specializing in Python, Machine Learning.</p>
+            <div class="skills">
+                <span class="skill-badge">Python</span><span class="skill-badge">Machine Learning</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section id="projects">
+            <h2>Featured Projects</h2>
+            <div class="grid">
+                
+        <div class="project-card">
+            <h3>STST</h3>
+            <p class="tech">Python</p>
+            <p>None</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/STST" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/STST?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3>Swathy1209</h3>
+            <p class="tech">None</p>
+            <p>Config files for my GitHub profile.</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/Swathy1209" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/Swathy1209?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3>orchestrai-agent</h3>
+            <p class="tech">Python</p>
+            <p>None</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div style="margin-top:0.5rem; padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:6px; font-size:0.8rem;">
+                <span style="color:#2e7d32; font-weight:bold;">Security Risk: 0</span>
+                <div style="margin-top:0.2rem; color:var(--text-muted);">&bull; Secure</div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/orchestrai-agent" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/orchestrai-agent?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3>orchestrai-db</h3>
+            <p class="tech">HTML</p>
+            <p>None</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div style="margin-top:0.5rem; padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:6px; font-size:0.8rem;">
+                <span style="color:#2e7d32; font-weight:bold;">Security Risk: 0</span>
+                <div style="margin-top:0.2rem; color:var(--text-muted);">&bull; Secure</div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/orchestrai-db" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/orchestrai-db?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3>acia-cloud-deployment</h3>
+            <p class="tech">None</p>
+            <p>None</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div style="margin-top:0.5rem; padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:6px; font-size:0.8rem;">
+                <span style="color:#2e7d32; font-weight:bold;">Security Risk: 0</span>
+                <div style="margin-top:0.2rem; color:var(--text-muted);">&bull; Secure</div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/acia-cloud-deployment" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/acia-cloud-deployment?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3>acia-playwright</h3>
+            <p class="tech">JavaScript</p>
+            <p>None</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div style="margin-top:0.5rem; padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:6px; font-size:0.8rem;">
+                <span style="color:#2e7d32; font-weight:bold;">Security Risk: 0</span>
+                <div style="margin-top:0.2rem; color:var(--text-muted);">&bull; Secure</div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/acia-playwright" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/acia-playwright?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3>Azure_App</h3>
+            <p class="tech">Python</p>
+            <p>None</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/Azure_App" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/Azure_App?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+        <div class="project-card">
+            <h3>Portfolio</h3>
+            <p class="tech">TypeScript</p>
+            <p>None</p>
+            <p class="impact"><em>No impact metric formulated.</em></p>
+            
+            <div class="card-footer">
+                <a href="https://github.com/Swathy1209/Portfolio" class="gh-btn" target="_blank">GitHub</a>
+                <img src="https://img.shields.io/github/stars/Swathy1209/Portfolio?style=social" alt="GitHub stars" style="margin-right:10px;">
+            </div>
+        </div>
+        
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Built with OrchestrAI</p>
+    </footer>
+</body>
+</html>

@@ -46,6 +46,7 @@ STATIC_DIRS = [
     "application_packages",
     "frontend/practice",
     "frontend/portfolio",
+    "frontend/portfolio/internships",
     "optimized_resumes",
     "cover_letters",
 ]

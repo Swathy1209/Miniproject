@@ -1,0 +1,345 @@
+- company: RefinedScience
+  role: Data Engineering Intern
+  match_score: 30
+  selection_probability: Low
+  priority: Optional
+- company: Cylinder Health
+  role: Junior Data Engineer
+  match_score: 30
+  selection_probability: Low
+  priority: Optional
+- company: Tinder
+  role: Machine Learning Engineer Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Handshake
+  role: AI/Machine Learning Engineer Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Cvent
+  role: Data Science Intern (Summer 2026)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Transcarent
+  role: Machine Learning Engineer Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Lensa
+  role: Data Science Summer Intern (Remote & Paid)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Tatari
+  role: Data Science, Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Generate:Biomedicines
+  role: Machine Learning Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Moloco
+  role: Machine Learning Engineer Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: TikTok
+  role: (General Hire) Machine Learning Engineer Intern (TikTok-Recommendation) -
+    2026 Summer (BS/MS)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Typeface
+  role: ML Engineer Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: TikTok
+  role: Machine Learning Engineer Intern - TikTok Search E-Commerce team - 2026 Summer
+    (BS/MS)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Lightmatter
+  role: Machine Learning Research Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: PathAI
+  role: Machine Learning Intern/Co-op (Summer/Fall 2026)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Lensa
+  role: Machine Learning Science Intern - Summer 2026 Start
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Lensa
+  role: Machine Learning Intern - Summer 2026
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Go Offer
+  role: Data Analyst
+  match_score: 70
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: AUMOVIO
+  role: Data Analysis Intern (Yearlong)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: ZURU Toys
+  role: Data Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Aday
+  role: Data Analysis Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Toshiba America Electronic Components, Inc.
+  role: 5039 Data Analyst Engineering Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Okta for Developers
+  role: Data Analyst Intern (Summer 2026)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Anne Klein Official
+  role: Data Analyst Internship Spring 2026
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Sloan
+  role: Data Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: ARM Institute
+  role: Data Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Cornerstone Building Brands
+  role: Data Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Go Offer
+  role: Business Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: TikTok
+  role: Business Analyst Project Intern - Monetization Strategy & Operations - 2026
+    Start (BS/MS)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: TikTok
+  role: Business Analyst Project Intern (GBS SMB) - 2026 Start (BS/MS)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Lensa
+  role: Business Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Bellwood
+  role: Business Analyst / QA Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Maximus
+  role: Business Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Apollo Mission Critical Engineering
+  role: Multiple U.S Locations - Business Analyst Intern (BA-I) - Summer 2026
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: MTX Group
+  role: Business Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Stripe
+  role: Data Analyst, Intern (Master's degree)
+  match_score: 25
+  selection_probability: Low
+  priority: Optional
+- company: Stripe
+  role: PhD Machine Learning Engineer, Intern
+  match_score: 25
+  selection_probability: Low
+  priority: Optional
+- company: Storybizz Media Private Limited
+  role: Artificial Intelligence (AI)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: FiftySeven
+  role: Data Engineer
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Unknown
+  role: Data Science Intern
+  match_score: 80
+  selection_probability: Medium
+  priority: Apply Now
+- company: Innoknowvex
+  role: Data Science
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Primetrade.ai
+  role: Artificial Intelligence (AI)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Infinity Assurance Solutions Private Limited
+  role: Computer Vision
+  match_score: 70
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Emoolar Technology Private Limited
+  role: Artificial Intelligence (AI)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Unknown
+  role: Machine Learning Intern
+  match_score: 80
+  selection_probability: Medium
+  priority: Apply Now
+- company: Symonis
+  role: Machine Learning
+  match_score: 70
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Unknown
+  role: Artificial Intelligence Intern
+  match_score: 80
+  selection_probability: Medium
+  priority: Apply Now
+- company: Catch Sports Analytics
+  role: Sports Data Analyst
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Aviate Manpower
+  role: Data Science
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Career Solutions
+  role: Data Science
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Siemens Healthcare Private Limited
+  role: Data Engineer
+  match_score: 70
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Ingram Micro
+  role: Data Analyst
+  match_score: 70
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Lensa
+  role: Data Science Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Cohere
+  role: Machine Learning Intern/Co-op  (Spring 2026)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Woven by Toyota
+  role: Machine Learning Engineer, Behavior (Internship)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Samsung Ads
+  role: Deep Learning Internship - Summer 2026
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: d-Matrix
+  role: Machine Learning Research Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Samsung Ads
+  role: Deep Learning / GenAI Internship - Summer 2026
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: ByteDance
+  role: Machine Learning Engineer Intern (E-commerce-Recommendation) - 2026 Start
+    (PhD)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Johns Hopkins Applied Physics Laboratory
+  role: 2026 Internship  – Artificial Intelligence and Machine Learning (AI/ML) Research
+    Assistant
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Matson Logistics
+  role: AI & Machine Learning Intern – Operations
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: TikTok
+  role: Data Analyst Intern (TikTok Shop AMS Data Science) - 2026 Summer (BS/MS)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Moloco
+  role: Data Science Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Metropolitan Transportation Authority
+  role: Data Analyst (Power), Emerging Talent Intern (Summer)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Plymouth Rock Assurance
+  role: Data Engineer Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: TikTok
+  role: Business Analyst Intern (Business Integrity) - 2026 Summer (BS/MS)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Bankers Financial Corporation
+  role: Business Analyst Intern
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration
+- company: Credibly
+  role: Intern - Data Science/Analyst (Hybrid in NY)
+  match_score: 75
+  selection_probability: Medium
+  priority: Strong Consideration

@@ -21,6 +21,7 @@ from backend.agents.cover_letter_agent import run_cover_letter_agent
 from backend.agents.practice_agent import run_practice_agent
 from backend.agents.resume_optimization_agent import run_resume_optimization_agent
 from backend.agents.portfolio_builder_agent import run_portfolio_builder_agent
+from backend.agents.per_internship_portfolio_agent import run_per_internship_portfolio_agent
 from backend.agents.repo_security_scanner_agent import run_repo_security_scanner_agent
 from backend.agents.career_strategy_agent import run_career_strategy_agent
 from backend.agents.auto_apply_agent import run_auto_apply_agent
@@ -141,6 +142,9 @@ def run_orchestrai_pipeline():
     # STEP 2.9: Generate Career Strategy
     run_career_strategy_agent()
 
+    # STEP 2.95: Generate per-internship customized portfolio pages
+    run_per_internship_portfolio_agent()
+
     # STEP 3: Read GitHub database
     jobs_data = read_yaml_from_github("database/jobs.yaml")
     skill_gap_data = read_yaml_from_github("database/skill_gap_per_job.yaml")
@@ -152,6 +156,7 @@ def run_orchestrai_pipeline():
     portfolio_data = read_yaml_from_github("database/portfolio.yaml")
     security_data = read_yaml_from_github("database/security_reports.yaml")
     strategy_data = read_yaml_from_github("database/career_strategy.yaml")
+    per_internship_portfolio_data = read_yaml_from_github("database/per_internship_portfolios.yaml")
 
     jobs = jobs_data.get("jobs", []) if isinstance(jobs_data, dict) else []
     skill_analysis = skill_gap_data.get("job_skill_analysis", []) if isinstance(skill_gap_data, dict) else []
@@ -190,6 +195,12 @@ def run_orchestrai_pipeline():
     practice_lookup = {
         (item.get("company", ""), item.get("role", "")): item.get("practice_link", "")
         for item in practice_list if isinstance(item, dict)
+    }
+
+    per_internship_list = per_internship_portfolio_data.get("per_internship_portfolios", []) if isinstance(per_internship_portfolio_data, dict) else []
+    per_internship_lookup = {
+        (item.get("company", ""), item.get("role", "")): item.get("portfolio_url", "")
+        for item in per_internship_list if isinstance(item, dict)
     }
 
     portfolio_url = portfolio_data.get("portfolio", {}).get("url", "#") if isinstance(portfolio_data, dict) else "#"
@@ -273,6 +284,15 @@ def run_orchestrai_pipeline():
         else:
             practice_html = '<span style="color:#999;">Not Generated</span>'
 
+        # Per-internship customized portfolio
+        pip_url = per_internship_lookup.get(key, "")
+        if pip_url:
+            row_portfolio_html = f'<a href="{pip_url}" style="background:#2e7d32;color:white;padding:8px 14px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600;min-width:max-content;">View My Portfolio →</a><br/><span style="font-size:10px;color:#888">Customized for this role</span>'
+        elif portfolio_url and portfolio_url != "#":
+            row_portfolio_html = f'<a href="{portfolio_url}" style="background:#558b2f;color:white;padding:8px 14px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600;">View Portfolio</a>'
+        else:
+            row_portfolio_html = '<span style="color:#999;">Not Generated</span>'
+
         rows += f"""
         <tr>
             <td>{job.get('company', '')}</td>
@@ -285,7 +305,7 @@ def run_orchestrai_pipeline():
             <td>{roadmap}</td>
             <td>{cl_html}<br><br>{opt_html}</td>
             <td>{practice_html}</td>
-            <td>{portfolio_html}</td>
+            <td>{row_portfolio_html}</td>
         </tr>
         """
 

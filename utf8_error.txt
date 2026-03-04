@@ -1,0 +1,51 @@
+python : Traceback (most 
+recent call last):
+At line:1 char:1
++ python -c "from backend.age
+nts.execution_agent import 
+run_orchestrai_ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (Traceba  
+  ck (most recent call las   
+ t)::String) [], RemoteEx    
+ception
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+  File "<string>", line 1, 
+in <module>
+  File "C:\Users\swathiga\Dow
+nloads\MultiAgent_Project\bac
+kend\agents\execution_agent.p
+y", line 87, in 
+run_orchestrai_pipeline
+    
+run_portfolio_builder_agent()
+  File "C:\Users\swathiga\Dow
+nloads\MultiAgent_Project\bac
+kend\agents\portfolio_builder
+_agent.py", line 442, in 
+run_portfolio_builder_agent
+    any(tech in 
+desc.get("technologies", 
+"").lower() for tech in 
+["streamlit", "fastapi", 
+"flask"])
+  File "C:\Users\swathiga\Dow
+nloads\MultiAgent_Project\bac
+kend\agents\portfolio_builder
+_agent.py", line 442, in 
+<genexpr>
+    any(tech in 
+desc.get("technologies", 
+"").lower() for tech in 
+["streamlit", "fastapi", 
+"flask"])
+                ^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' 
+object has no attribute 
+'lower'

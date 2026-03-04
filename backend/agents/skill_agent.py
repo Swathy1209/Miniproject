@@ -40,21 +40,30 @@ SKILL_GAP_PER_JOB_FILE = "database/skill_gap_per_job.yaml"
 # Helper functions for database interaction
 # ==============================================================================
 
+DEFAULT_SKILLS = [
+    "Python", "Machine Learning", "Data Analysis", "SQL",
+    "TensorFlow", "scikit-learn", "Pandas", "NumPy",
+    "Data Visualization", "Deep Learning", "NLP", "FastAPI"
+]
+
 def read_user_skills_yaml() -> list[str]:
     """
-    Read extracted skills from database/users.yaml on GitHub.
-    Returns: list of skills.
+    Read extracted skills from database/users.yaml.
+    Falls back to DEFAULT_SKILLS if none found.
     """
     try:
         data = read_yaml_from_github(USERS_FILE)
         skills = data.get("user", {}).get("resume_skills", [])
         if not isinstance(skills, list):
             skills = []
-        logger.info("SkillAgent: Found %d skills in users.yaml.", len(skills))
-        return [str(s).strip() for s in skills if s]
+        skills = [str(s).strip() for s in skills if s]
+        if skills:
+            logger.info("SkillAgent: Found %d skills in users.yaml.", len(skills))
+            return skills
     except Exception as exc:
         logger.error("SkillAgent: read_user_skills_yaml failed - %s", exc)
-        return []
+    logger.info("SkillAgent: No skills in users.yaml — using default skill set.")
+    return DEFAULT_SKILLS
 
 def read_jobs_yaml() -> list[dict]:
     """Read jobs.yaml from GitHub."""
@@ -124,14 +133,8 @@ def run_skill_agent() -> dict:
     }
     
     try:
-        # Step 1: Read resume skills 
+        # Step 1: Read resume skills (always has values thanks to DEFAULT_SKILLS fallback)
         resume_skills = read_user_skills_yaml()
-        if not resume_skills:
-            logger.warning("SkillAgent: No skills extracted from user file.")
-            log_agent_activity("Skill analysis skipped - no resume skills", status="partial")
-            result["status"] = "partial"
-            return result
-            
         user_lower = {s.lower() for s in resume_skills}
 
         # Step 2: Read jobs
