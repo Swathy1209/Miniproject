@@ -19,6 +19,7 @@ from backend.agents.cover_letter_agent import run_cover_letter_agent
 from backend.agents.practice_agent import run_practice_agent
 from backend.agents.resume_optimization_agent import run_resume_optimization_agent
 from backend.agents.portfolio_builder_agent import run_portfolio_builder_agent
+from backend.agents.repo_security_scanner_agent import run_repo_security_scanner_agent
 from backend.agents.auto_apply_agent import run_auto_apply_agent
 from backend.agents.opportunity_matching_agent import run_opportunity_matching_agent
 from backend.github_yaml_db import read_yaml_from_github, append_log_entry
@@ -78,7 +79,10 @@ def run_orchestrai_pipeline():
     # STEP 2: Generate per-job skill gap analysis
     run_skill_agent()
 
-    # STEP 2.45: Generate Portfolio Website
+    # STEP 2.45: Scan Repositories for Security Vulnerabilities
+    run_repo_security_scanner_agent()
+
+    # STEP 2.5: Generate Portfolio Website
     run_portfolio_builder_agent()
 
     # STEP 2.5: Generate cover letters
@@ -105,6 +109,7 @@ def run_orchestrai_pipeline():
     scores_data = read_yaml_from_github("database/opportunity_scores.yaml")
     practice_data = read_yaml_from_github("database/practice_sessions.yaml")
     portfolio_data = read_yaml_from_github("database/portfolio.yaml")
+    security_data = read_yaml_from_github("database/security_reports.yaml")
 
     jobs = jobs_data.get("jobs", []) if isinstance(jobs_data, dict) else []
     skill_analysis = skill_gap_data.get("job_skill_analysis", []) if isinstance(skill_gap_data, dict) else []
@@ -147,6 +152,21 @@ def run_orchestrai_pipeline():
 
     portfolio_url = portfolio_data.get("portfolio", {}).get("url", "#") if isinstance(portfolio_data, dict) else "#"
     portfolio_html = f'<a href="{portfolio_url}" style="background:#2e7d32;color:white;padding:8px 14px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600;min-width:max-content;">View Portfolio</a>' if portfolio_url != "#" else "Not Generated"
+
+    security_reports = security_data.get("security_reports", []) if isinstance(security_data, dict) else []
+    sec_insights_html = ""
+    if security_reports:
+        for report in security_reports:
+            repo_name = report.get("repo", "Unknown")
+            risk_score = report.get("risk_score", 0)
+            issues = report.get("issues", [])
+            risk_level = "High" if risk_score > 4 else "Medium" if risk_score > 1 else "Low"
+            risk_color = "red" if risk_level == "High" else "orange" if risk_level == "Medium" else "green"
+            
+            top_issue = str(issues[0]) if issues else "No issues found."
+            sec_insights_html += f"<li><strong>{repo_name}</strong> - Risk Level: <span style='color:{risk_color};font-weight:bold;'>{risk_level}</span><br><i>Recommended Fix:</i> {top_issue}</li>"
+    else:
+        sec_insights_html = "<li>No security scans performed yet.</li>"
 
     # STEP 5: Generate HTML table rows
     rows = ""
@@ -241,6 +261,11 @@ def run_orchestrai_pipeline():
             </tr>
             {rows}
         </table>
+
+        <h3>Security Insights</h3>
+        <ul>
+            {sec_insights_html}
+        </ul>
     </body>
     </html>
     """

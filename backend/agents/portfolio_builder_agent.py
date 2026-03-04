@@ -38,6 +38,7 @@ openai_client = OpenAI(
 
 USERS_FILE = "database/users.yaml"
 PORTFOLIO_FILE = "database/portfolio.yaml"
+SECURITY_REPORTS_FILE = "database/security_reports.yaml"
 
 def _get_public_url(file_path: str) -> str:
     base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:10000")
@@ -152,21 +153,43 @@ def _generate_summary(name: str, skills: list, career_goals: list) -> str:
     except Exception:
         return f"I am a passionate software engineer specializing in {', '.join(skills[:3])}."
 
-def _render_portfolio_html(user: dict, summary: str, projects: list[dict]) -> str:
+def _render_portfolio_html(user: dict, summary: str, projects: list[dict], security_reports: list[dict]) -> str:
     name = user.get("name", "Applicant")
     skills = user.get("skills", user.get("resume_skills", ["Python", "Machine Learning", "FastAPI"]))
     
     skills_html = "".join([f'<span class="skill-badge">{s}</span>' for s in skills])
     
+    sec_lookup = {
+        item.get("repo", ""): item
+        for item in security_reports if isinstance(item, dict)
+    }
+
     projects_html = ""
     for p in projects:
         gh_url = p.get("github_link", "#")
         demo_url = p.get("demo_link", gh_url)
+        orig_name = p.get("original_name", "")
         
         if p.get("demo_link") != "#":
             demo_btn = f'<a href="{demo_url}" class="demo-btn" target="_blank">Live Demo</a>'
         else:
-            demo_btn = f'<img src="https://img.shields.io/github/stars/{user.get("github_username")}/{p.get("original_name", "")}?style=social" alt="GitHub stars" style="margin-right:10px;">'
+            demo_btn = f'<img src="https://img.shields.io/github/stars/{user.get("github_username")}/{orig_name}?style=social" alt="GitHub stars" style="margin-right:10px;">'
+
+        sec_data = sec_lookup.get(orig_name, {})
+        sec_score = sec_data.get("risk_score", 0)
+        sec_issues = sec_data.get("issues", [])
+        
+        if sec_data:
+            badge_color = "#2e7d32" if sec_score <= 1 else "#f29900" if sec_score <= 4 else "#d32f2f"
+            issues_snippet = "<br>".join([f"&bull; {str(issue).replace('<', '&lt;').replace('>', '&gt;')}" for issue in sec_issues[:2]])
+            sec_html = f"""
+            <div style="margin-top:0.5rem; padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:6px; font-size:0.8rem;">
+                <span style="color:{badge_color}; font-weight:bold;">Security Risk: {sec_score}</span>
+                <div style="margin-top:0.2rem; color:var(--text-muted);">{issues_snippet}</div>
+            </div>
+            """
+        else:
+            sec_html = ""
 
         projects_html += f"""
         <div class="project-card">
@@ -174,6 +197,7 @@ def _render_portfolio_html(user: dict, summary: str, projects: list[dict]) -> st
             <p class="tech">{p.get('technologies')}</p>
             <p>{p.get('summary')}</p>
             <p class="impact"><em>{p.get('impact_statement')}</em></p>
+            {sec_html}
             <div class="card-footer">
                 <a href="{gh_url}" class="gh-btn" target="_blank">GitHub</a>
                 {demo_btn}
@@ -429,8 +453,16 @@ def run_portfolio_builder_agent():
             "demo_link": demo_link
         })
         
+    # 3.5. Fetch Security Reports
+    sec_data_obj = {}
+    try:
+        sec_data_obj = read_yaml_from_github(SECURITY_REPORTS_FILE)
+    except:
+        pass
+    security_reports = sec_data_obj.get("security_reports", [])
+        
     # 4. Render HTML
-    html = _render_portfolio_html(user, summary, project_list)
+    html = _render_portfolio_html(user, summary, project_list, security_reports)
     url = save_portfolio_page(html)
     
     # 5. Metadata

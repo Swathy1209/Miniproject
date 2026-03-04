@@ -27,3 +27,4 @@ python-dotenv>=1.0.1       # Load .env file into os.environ
 # asyncio, base64, logging, smtplib, email, re, datetime, signal, sys
 PyPDF2>=3.0.1              # PDF text parser (skill_agent.py)
 PyMuPDF>=1.23.0            # PDF parser for ResumeOptimizationAgent
+bandit>=1.7.0              # Python security code scanner
