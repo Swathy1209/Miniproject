@@ -101,6 +101,18 @@ def start_scheduler():
     except Exception as exc:
         logger.error("Scheduler startup failed: %s", exc)
 
+from fastapi.responses import JSONResponse
+
+@app.head("/")
+def head_root():
+    """UptimeRobot / health probes send HEAD — return 200 so it doesn't mark us as down."""
+    return JSONResponse(content={}, status_code=200)
+
+@app.get("/health")
+def health():
+    """Health check endpoint for UptimeRobot monitoring. Always returns 200."""
+    return JSONResponse(content={"status": "ok", "service": "OrchestrAI"}, status_code=200)
+
 @app.get("/", response_class=HTMLResponse)
 def index():
     eu = os.getenv("EMAIL_USER", "NOT SET")

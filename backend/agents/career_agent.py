@@ -551,72 +551,71 @@ async def _fetch_all_sources() -> list[dict]:
 # AI Relevance Filter
 # ──────────────────────────────────────────────────────────────────────────────
 
-def _is_relevant_via_ai(job: dict) -> bool:
-    """
-    Ask OpenAI whether this internship is relevant to AI / ML / Data domains.
-    Returns True if relevant, False otherwise.
-    Falls back to keyword filter if OpenAI is unavailable.
-    """
-    if not openai_client:
-        # Fallback: keyword filter only
-        return _keyword_prefilter(job.get("role", ""))
-
-    role     = job.get("role", "")
-    company  = job.get("company", "")
-    keywords = ", ".join(job.get("role_keywords", []))
-    skills   = ", ".join(job.get("technical_skills", []))
-
-    prompt = (
-        f"Internship role: '{role}' at {company}.\n"
-        f"Keywords: {keywords}\n"
-        f"Skills: {skills}\n\n"
-        "Is this internship relevant to AI, Machine Learning, Data Science, "
-        "Data Analyst, or Business Analyst domains? Answer only YES or NO."
-    )
-
-    try:
-        response = openai_client.chat.completions.create(
-            model="gemini-2.0-flash",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a career relevance classifier. "
-                        "Answer strictly with YES or NO based on domain relevance."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=5,
-            temperature=0,
-        )
-        answer = response.choices[0].message.content.strip().upper()
-        return answer.startswith("YES")
-    except Exception as exc:
-        logger.warning("CareerAgent: OpenAI relevance check failed for '%s' — %s. Using keyword fallback.", role, exc)
-        return _keyword_prefilter(role)
-
-
 def filter_jobs_ai(jobs: list[dict]) -> list[dict]:
     """
-    Filter the job list using OpenAI relevance classification.
-    Processes in small batches with a brief pause to respect rate limits.
-
-    Only keeps internships relevant to: AI, ML, Data Science,
-    Data Analyst, Business Analyst, Deep Learning, NLP, Computer Vision.
+    Filter jobs using a SINGLE batched Gemini API call instead of one call per job.
+    This eliminates 429 rate limit errors by going from 100+ calls → 2-3 calls max.
+    Falls back to keyword filter if API is unavailable or quota exceeded.
     """
-    logger.info("CareerAgent: Filtering %d jobs via AI relevance check…", len(jobs))
-    relevant: list[dict] = []
-    batch_size = 10
+    logger.info("CareerAgent: Filtering %d jobs via AI relevance check (batched)…", len(jobs))
 
-    for i in range(0, len(jobs), batch_size):
-        batch = jobs[i : i + batch_size]
-        for job in batch:
-            if _is_relevant_via_ai(job):
-                relevant.append(job)
-        # Brief sleep between batches to stay within OpenAI RPM limits
-        if i + batch_size < len(jobs):
-            time.sleep(1)
+    if not openai_client or not jobs:
+        logger.info("CareerAgent: No LLM client — using keyword fallback for all jobs.")
+        return [j for j in jobs if _keyword_prefilter(j.get("role", ""))]
+
+    # Build a numbered list of role+company for the LLM to classify in one call
+    BATCH = 50  # send max 50 at a time to stay within token limits
+    relevant: list[dict] = []
+
+    for start in range(0, len(jobs), BATCH):
+        batch = jobs[start: start + BATCH]
+        lines = "\n".join(
+            f"{i+1}. {j.get('role','')} @ {j.get('company','')} | skills: {', '.join(j.get('technical_skills',[])[:3])}"
+            for i, j in enumerate(batch)
+        )
+        prompt = (
+            "You are a career relevance classifier.\n"
+            "For each internship below, reply with its NUMBER if it is relevant to:\n"
+            "AI, Machine Learning, Data Science, Data Engineering, Data Analyst, "
+            "Business Analyst, NLP, Computer Vision, or Deep Learning.\n\n"
+            f"{lines}\n\n"
+            "Reply ONLY with comma-separated numbers of relevant internships. "
+            "Example: 1,3,5,7\n"
+            "If none are relevant, reply: NONE"
+        )
+        try:
+            resp = openai_client.chat.completions.create(
+                model="gemini-2.0-flash",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=200,
+                temperature=0,
+            )
+            answer = resp.choices[0].message.content.strip()
+            logger.info("CareerAgent: Batch %d-%d LLM answer: %s", start+1, start+len(batch), answer[:80])
+
+            if answer.upper() == "NONE":
+                continue
+
+            # Parse "1,3,5" → set of 1-based indices
+            indices = set()
+            for token in answer.replace(" ", "").split(","):
+                try:
+                    idx = int(token)
+                    if 1 <= idx <= len(batch):
+                        indices.add(idx - 1)  # convert to 0-based
+                except ValueError:
+                    pass
+
+            for idx in sorted(indices):
+                relevant.append(batch[idx])
+
+        except Exception as exc:
+            logger.warning("CareerAgent: Batch LLM call failed — %s. Using keyword fallback for this batch.", exc)
+            relevant.extend([j for j in batch if _keyword_prefilter(j.get("role", ""))])
+
+        # Small pause between batches to respect rate limits
+        if start + BATCH < len(jobs):
+            time.sleep(2)
 
     logger.info("CareerAgent: %d / %d jobs passed relevance filter.", len(relevant), len(jobs))
     return relevant
@@ -624,6 +623,7 @@ def filter_jobs_ai(jobs: list[dict]) -> list[dict]:
 
 # Backward-compat alias
 filter_relevant_jobs_ai = filter_jobs_ai
+
 
 
 # ──────────────────────────────────────────────────────────────────────────────
