@@ -730,17 +730,17 @@ def _render_practice_html(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{company} | {role} - Interview Prep</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {{
-            --bg-main: #0a0a0f;
-            --bg-card: #14141d;
-            --bg-hover: #1c1c28;
-            --accent: #6366f1;
-            --accent-hover: #4f46e5;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border: #27272a;
+            --bg-main: #09090b;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-hover: rgba(255, 255, 255, 0.08);
+            --accent: #3b82f6;
+            --secondary: #8b5cf6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
             --succ: #10b981;
             --warn: #eab308;
             --err: #ef4444;
@@ -750,6 +750,10 @@ def _render_practice_html(
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-main);
             color: var(--text-main);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1), transparent 30%);
+            background-attachment: fixed;
             line-height: 1.6;
             display: flex;
             flex-direction: column;
@@ -758,9 +762,10 @@ def _render_practice_html(
         
         /* Navbar */
         .navbar {{
-            background-color: var(--bg-card);
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
+            padding: 1.5rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -768,8 +773,14 @@ def _render_practice_html(
             top: 0;
             z-index: 100;
         }}
-        .brand {{ font-weight: 800; font-size: 1.25rem; background: linear-gradient(to right, #6366f1, #a855f7); -webkit-background-clip: text; color: transparent; }}
-        .nav-role {{ font-weight: 500; color: var(--text-muted); font-size: 0.95rem; }}
+        .brand {{ 
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800; font-size: 1.4rem; 
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #ffffff 30%, #a8a29e 100%); 
+            -webkit-background-clip: text; color: transparent; 
+        }}
+        .nav-role {{ font-weight: 500; color: var(--accent); font-size: 0.95rem; background: rgba(59, 130, 246, 0.1); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2);}}
         
         /* Main Layout */
         .container {{
@@ -816,30 +827,42 @@ def _render_practice_html(
         
         /* Content Area */
         .content-area {{ min-width: 0; }}
-        .tab-pane {{ display: none; animation: fadeIn 0.4s ease; }}
+        .tab-pane {{ display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }}
         .tab-pane.active {{ display: block; }}
-        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(15px); }} to {{ opacity: 1; transform: translateY(0); }} }}
         
-        h1.page-title {{ font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }}
+        h1.page-title {{ 
+            font-family: 'Outfit', sans-serif; 
+            font-size: 2.5rem; 
+            font-weight: 800; 
+            margin-bottom: 0.5rem; 
+            letter-spacing: -0.5px;
+        }}
         p.page-subtitle {{ color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }}
 
         /* Cards & UI Blocks */
         .card {{
             background: var(--bg-card);
+            backdrop-filter: blur(10px);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 16px;
+            padding: 1.75rem;
             margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }}
+        .card:hover {{
+            border-color: rgba(255,255,255,0.15);
         }}
 
         /* Q&A Styles */
         .qa-card {{ padding: 0; overflow: hidden; }}
-        .qa-header {{ background: rgba(255,255,255,0.02); padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; gap: 1rem; align-items: flex-start; }}
-        .q-badge {{ background: rgba(99,102,241,0.2); color: #818cf8; padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; }}
-        .q-text {{ font-weight: 600; font-size: 1.1rem; line-height: 1.5; }}
+        .qa-header {{ background: rgba(0,0,0,0.2); padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; gap: 1rem; align-items: flex-start; }}
+        .q-badge {{ background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--accent); padding: 0.25rem 0.75rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; }}
+        .q-text {{ font-weight: 600; font-size: 1.1rem; line-height: 1.5; color: #fff; }}
         .qa-body {{ padding: 1.5rem; }}
-        .a-label {{ font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.5rem; }}
-        .a-text {{ color: #d1d5db; line-height: 1.7; }}
+        .a-label {{ font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700; margin-bottom: 0.75rem; display: block; }}
+        .a-text {{ color: #e2e8f0; line-height: 1.7; }}
 
         /* Intro Box */
         .intro-box {{ font-size: 1.1rem; line-height: 1.8; color: #e2e8f0; font-style: italic; border-left: 4px solid var(--accent); padding-left: 1.5rem; }}

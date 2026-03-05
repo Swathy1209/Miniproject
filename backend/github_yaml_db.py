@@ -84,25 +84,78 @@ except PermissionError:
     os.makedirs(os.path.join(DATA_DIR, "database"), exist_ok=True)
 
 def _auth_headers() -> dict[str, str]:
+    if GITHUB_TOKEN:
+        return {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json"
+        }
     return {}
 
 def _get_raw_file(file_path: str) -> tuple[str, str]:
+    """Get raw text content and SHA from GitHub (preferred) or local fallback."""
+    # 1. Try GitHub first
+    if GITHUB_TOKEN and GITHUB_USERNAME and GITHUB_REPO:
+        url = f"{_BASE_URL}/repos/{_REPO_SLUG}/contents/{file_path}?ref={GITHUB_BRANCH}"
+        try:
+            resp = requests.get(url, headers=_auth_headers(), timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                content = base64.b64decode(data["content"]).decode("utf-8")
+                sha = data["sha"]
+                # Cache locally for speed/serving
+                _save_local(file_path, content)
+                return content, sha
+            elif resp.status_code == 404:
+                logger.info("GitHubYAMLDB: '%s' not on GitHub — checked %s", file_path, url)
+        except Exception as exc:
+            logger.warning("GitHubYAMLDB: GitHub read failed for %s — %s", file_path, exc)
+
+    # 2. Local Fallback
     full_path = os.path.join(DATA_DIR, file_path)
-    if not os.path.exists(full_path):
-        logger.info("LocalDB: '%s' does not exist yet — will create.", file_path)
-        return "", ""
+    if os.path.exists(full_path):
+        with open(full_path, "r", encoding="utf-8") as f:
+            return f.read(), ""
+    
+    return "", ""
 
-    with open(full_path, "r", encoding="utf-8") as f:
-        raw = f.read()
-    return raw, ""
-
-def _put_raw_file(file_path: str, text: str, sha: str, commit_msg: str) -> bool:
+def _save_local(file_path: str, text: str):
     full_path = os.path.join(DATA_DIR, file_path)
     os.makedirs(os.path.dirname(full_path), exist_ok=True)
     with open(full_path, "w", encoding="utf-8") as f:
         f.write(text)
-    logger.info("LocalDB: '%s' saved — %s", file_path, commit_msg)
-    return True
+
+def _put_raw_file(file_path: str, text: str, sha: str, commit_msg: str) -> bool:
+    """Save locally and attempt to push to GitHub."""
+    # 1. Local Save (Always do this so Render can serve it immediately)
+    _save_local(file_path, text)
+    
+    # 2. GitHub Push
+    if GITHUB_TOKEN and GITHUB_USERNAME and GITHUB_REPO:
+        url = f"{_BASE_URL}/repos/{_REPO_SLUG}/contents/{file_path}"
+        payload = {
+            "message": commit_msg,
+            "content": base64.b64encode(text.encode("utf-8")).decode("utf-8"),
+            "branch": GITHUB_BRANCH
+        }
+        if sha:
+            payload["sha"] = sha
+        else:
+            # Try to get SHA if not provided (prevents 409 Conflict)
+            _, current_sha = _get_raw_file(file_path)
+            if current_sha:
+                payload["sha"] = current_sha
+
+        try:
+            resp = requests.put(url, headers=_auth_headers(), json=payload, timeout=15)
+            if resp.status_code in (200, 201):
+                logger.info("GitHubYAMLDB: Successfully pushed '%s' to GitHub.", file_path)
+                return True
+            else:
+                logger.warning("GitHubYAMLDB: Failed push to GitHub (%d) for %s: %s", resp.status_code, file_path, resp.text)
+        except Exception as exc:
+            logger.error("GitHubYAMLDB: GitHub push failed for %s — %s", file_path, exc)
+            
+    return True # Return true even if GitHub failed, as local save succeeded
 
 
 # ══════════════════════════════════════════════════════════════════════════════

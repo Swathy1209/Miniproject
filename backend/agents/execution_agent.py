@@ -366,7 +366,9 @@ def run_orchestrai_pipeline():
         if not isinstance(job, dict):
             continue
             
-        key = (job.get("company", ""), job.get("role", ""))
+        c_name = job.get("company", "")
+            
+        key = (c_name, job.get("role", ""))
         analysis = skill_lookup.get(key, {})
 
         missing_skills = ", ".join(analysis.get("missing_skills", []))
@@ -439,7 +441,6 @@ def run_orchestrai_pipeline():
             <td style='padding:8px;border:1px solid #ddd;color:#c62828;font-size:12px'>{missing_skills or '<span style="color:green">✓ All covered</span>'}</td>
             <td style='padding:8px;border:1px solid #ddd;font-size:12px;color:#1565c0'>{roadmap or '—'}</td>
             <td style='padding:8px;border:1px solid #ddd'>{cl_html}<br><br>{opt_html}</td>
-            <td style='padding:8px;border:1px solid #ddd;text-align:center'>{overall_sec_html}</td>
             <td style='padding:8px;border:1px solid #ddd;text-align:center'>{custom_portfolio_html}</td>
             <td style='padding:8px;border:1px solid #ddd;text-align:center'>{interview_html}</td>
         </tr>
@@ -488,7 +489,6 @@ def run_orchestrai_pipeline():
                 <th>Skill Gap</th>
                 <th>Learning Roadmap</th>
                 <th>Generated Assets</th>
-                <th>&#x1F512; Security Risk</th>
                 <th>&#x1F3AF; Custom Portfolio</th>
                 <th>&#x1F3A4; Interview Sim</th>
             </tr>

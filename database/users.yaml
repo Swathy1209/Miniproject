@@ -1,0 +1,15 @@
+user:
+  name: swathiga
+  email: swathiga22@gmail.com
+
+  resume_skills:
+    - Python
+    - SQL
+    - Machine Learning
+    - Pandas
+    - NumPy
+    - Data Analysis
+    - Scikit-learn
+    - Statistics
+    - Data Visualization
+    - Excel

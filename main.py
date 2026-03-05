@@ -11,6 +11,9 @@ import os
 import sys
 import threading
 import traceback
+import base64
+import requests
+from typing import List, Dict
 
 from dotenv import load_dotenv
 
@@ -39,8 +42,6 @@ from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="OrchestrAI Dashboard", description="OrchestrAI Autonomous Career Intelligence System.")
 
-# ── Determine writable DATA_DIR ───────────────────────────────────────────────
-DATA_DIR = os.getenv("DATA_DIR", ".")
 STATIC_DIRS = [
     "database",
     "application_packages",
@@ -52,15 +53,11 @@ STATIC_DIRS = [
     "optimized_resumes",
     "cover_letters",
 ]
+from backend.github_yaml_db import DATA_DIR
 
 for _d in STATIC_DIRS:
     _path = os.path.join(DATA_DIR, _d)
-    try:
-        os.makedirs(_path, exist_ok=True)
-    except PermissionError:
-        logger.warning("Permission denied: '%s'. Falling back to './data'", _path)
-        DATA_DIR = "./data"
-        os.makedirs(os.path.join(DATA_DIR, _d), exist_ok=True)
+    os.makedirs(_path, exist_ok=True)
 
 # Seed each directory with a placeholder so StaticFiles doesn't crash
 for _d in STATIC_DIRS:
@@ -86,12 +83,74 @@ _safe_mount("/application_packages", os.path.join(DATA_DIR, "application_package
 _safe_mount("/frontend/practice",   os.path.join(DATA_DIR, "frontend/practice"),    "practice")
 _safe_mount("/portfolio",           os.path.join(DATA_DIR, "frontend/portfolio"),   "portfolio", html=True)
 _safe_mount("/interview",           os.path.join(DATA_DIR, "frontend/interview"),   "interview", html=True)
-_safe_mount("/analytics",           os.path.join(DATA_DIR, "frontend/analytics"),   "analytics", html=True)
 _safe_mount("/optimized_resumes",   os.path.join(DATA_DIR, "optimized_resumes"),    "optimized_resumes")
 _safe_mount("/cover_letters",       os.path.join(DATA_DIR, "cover_letters"),        "cover_letters")
 
+@app.get("/analytics")
+@app.get("/analytics/")
+async def serve_analytics():
+    """Specific route for analytics to ensure index.html is served without 404s."""
+    path = os.path.join(DATA_DIR, "frontend/analytics/index.html")
+    if os.path.exists(path):
+        from fastapi.responses import FileResponse
+        return FileResponse(path)
+    # If not found, try a sync before giving up
+    sync_from_github_cloud()
+    if os.path.exists(path):
+         from fastapi.responses import FileResponse
+         return FileResponse(path)
+    return HTMLResponse("<h1>Hold on... 🤖</h1><p>The analytics dashboard is being synced from the cloud. Please refresh in 5 seconds.</p><script>setTimeout(()=>location.reload(), 5000)</script>", status_code=202)
+
+def sync_from_github_cloud():
+    """Download all YAML and HTML files from GitHub to local DATA_DIR."""
+    from backend.github_yaml_db import GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO, GITHUB_BRANCH, _BASE_URL, _auth_headers
+    if not all([GITHUB_TOKEN, GITHUB_USERNAME, GITHUB_REPO]):
+        logger.warning("Cloud Sync: Missing credentials — skipping sync.")
+        return
+
+    _REPO_SLUG = GITHUB_REPO if "/" in GITHUB_REPO else f"{GITHUB_USERNAME}/{GITHUB_REPO}"
+    logger.info("Cloud Sync: Starting deep sync from %s...", _REPO_SLUG)
+
+    dirs_to_sync = ["database", "frontend/analytics", "frontend/portfolio/internships", "frontend/interview", "frontend/practice"]
+    
+    for d in dirs_to_sync:
+        url = f"{_BASE_URL}/repos/{_REPO_SLUG}/contents/{d}?ref={GITHUB_BRANCH}"
+        try:
+            resp = requests.get(url, headers=_auth_headers(), timeout=15)
+            if resp.status_code == 200:
+                files = resp.json()
+                if isinstance(files, list):
+                    for f_meta in files:
+                        path = f_meta["path"]
+                        if f_meta["type"] == "file":
+                            # Download file
+                            f_url = f_meta["url"]
+                            f_resp = requests.get(f_url, headers=_auth_headers(), timeout=10)
+                            if f_resp.status_code == 200:
+                                content = base64.b64decode(f_resp.json()["content"]).decode("utf-8")
+                                local_path = os.path.join(DATA_DIR, path)
+                                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                                with open(local_path, "w", encoding="utf-8") as f:
+                                    f.write(content)
+                                logger.info("Cloud Sync: ✓ %s", path)
+            else:
+                logger.warning("Cloud Sync: Could not list %s (%d)", d, resp.status_code)
+        except Exception as e:
+            logger.error("Cloud Sync: Failed for %s - %s", d, e)
+
+@app.get("/sync")
+def manual_sync():
+    sync_from_github_cloud()
+    return {"status": "ok", "message": "Deep sync completed from GitHub."}
+
 @app.on_event("startup")
 def start_scheduler():
+    # Sync from cloud first so we have the latest files to serve
+    try:
+        sync_from_github_cloud()
+    except Exception as e:
+        logger.error("Initial sync failure: %s", e)
+
     try:
         from backend.scheduler import schedule_daily_internship_email, run_once_now
 

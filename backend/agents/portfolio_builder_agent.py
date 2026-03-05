@@ -38,6 +38,7 @@ openai_client = OpenAI(
 ) if OPENAI_API_KEY else None
 
 from backend.utils.ai_engine import safe_llm_call as _cb_llm_call
+from backend.utils.resume_parser import download_and_extract
 
 USERS_FILE = "database/users.yaml"
 PORTFOLIO_FILE = "database/portfolio.yaml"
@@ -91,7 +92,7 @@ def _get_readme(username: str, repo: str) -> str:
         pass
     return ""
 
-def _generate_project_description(repo: dict, readme: str) -> dict:
+def _generate_project_description(repo: dict, readme: str, resume_text: str = "") -> dict:
     if not openai_client:
         return {
             "title": repo.get("name", "Project"),
@@ -102,6 +103,8 @@ def _generate_project_description(repo: dict, readme: str) -> dict:
     
     prompt = f"""You are a technical portfolio writer.
 Rewrite the following GitHub repository into a professional project description for a portfolio website.
+I will also provide the user's resume. If the repository relates to any projects mentioned in the resume, incorporate those details (like actual impact numbers, specific tools used) into the description to make it highly personalized and accurate.
+
 Include:
 - Problem statement
 - Solution
@@ -111,6 +114,9 @@ Include:
 Repository name: {repo.get("name")}
 Description: {repo.get("description", "")}
 Readme content: {readme}
+
+User Resume Text:
+{resume_text[:2000]}
 
 Return exactly in valid JSON format:
 {{
@@ -141,11 +147,11 @@ Return exactly in valid JSON format:
             "impact_statement": "No impact metric formulated."
         }
 
-def _generate_summary(name: str, skills: list, career_goals: list) -> str:
+def _generate_summary(name: str, skills: list, career_goals: list, resume_text: str = "") -> str:
     if not openai_client:
         return f"I am a passionate software engineer specializing in {', '.join(skills[:3])}."
     
-    prompt = f"Write a professional, impressive 2-3 sentence portfolio introduction for a software engineer named {name} with skills in {skills} and career goals {career_goals}."
+    prompt = f"Write a professional, highly impressive 2-3 sentence portfolio introduction for a software engineer named {name}. Their technical skills include {skills} and their career goals are {career_goals}. Use details from their resume to make this summary truly personalized to their actual experience: \n\nResume excerpt:\n{resume_text[:2000]}"
     try:
         response_text = _cb_llm_call(
             messages=[{"role": "user", "content": prompt}],
@@ -198,14 +204,14 @@ def _render_portfolio_html(user: dict, summary: str, projects: list[dict], secur
 
         projects_html += f"""
         <div class="project-card">
-            <h3>{p.get('title')}</h3>
-            <p class="tech">{p.get('technologies')}</p>
-            <p>{p.get('summary')}</p>
-            <p class="impact"><em>{p.get('impact_statement')}</em></p>
+            <h3>{p.get("title", "")}</h3>
+            <p class="tech">{p.get("technologies", "")}</p>
+            <p>{p.get("summary", "")}</p>
+            <div class="impact"><em>" {p.get("impact_statement", "")} "</em></div>
             {sec_html}
             <div class="card-footer">
-                <a href="{gh_url}" class="gh-btn" target="_blank">GitHub</a>
-                {demo_btn}
+                <a href="{gh_url}" class="btn gh-btn" target="_blank">GitHub Repo</a>
+                {demo_btn.replace('demo-btn', 'btn demo-btn')}
             </div>
         </div>
         """
@@ -215,139 +221,236 @@ def _render_portfolio_html(user: dict, summary: str, projects: list[dict], secur
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{name} - Portfolio</title>
+    <title>{name} — AI & Data Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@800&display=swap" rel="stylesheet">
     <style>
         :root {{
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #cbd5e1;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
+            --bg-dark: #09090b;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --secondary: #8b5cf6;
+            --surface: rgba(255, 255, 255, 0.03);
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
         }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+            background-attachment: fixed;
+            line-height: 1.7;
         }}
-        .container {{
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 2rem;
-        }}
+        
+        .container {{ max-width: 1100px; margin: 0 auto; padding: 0 2rem; }}
+        
+        /* Hero Section */
         header {{
+            padding: 8rem 0 5rem 0;
             text-align: center;
-            padding: 4rem 1rem;
-            border-bottom: 1px solid #334155;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }}
+        .hero-badge {{
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            text-transform: uppercase;
         }}
         h1 {{
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            font-family: 'Outfit', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 30%, #a8a29e 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
         }}
         .summary {{
             font-size: 1.25rem;
-            color: var(--text-muted);
+            color: var(--text-dim);
             max-width: 700px;
-            margin: 0 auto 2rem auto;
+            margin: 0 auto 3rem auto;
+            font-weight: 300;
         }}
         .skills {{
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            max-width: 800px;
+            margin: 0 auto;
         }}
         .skill-badge {{
-            background: #334155;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
             font-size: 0.9rem;
             font-weight: 500;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }}
-        section {{
-            padding: 4rem 0;
+        .skill-badge:hover {{
+            background: var(--surface-hover);
+            border-color: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
         }}
-        section h2 {{
-            font-size: 2rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px solid var(--accent);
-            display: inline-block;
-            padding-bottom: 0.5rem;
+
+        /* Projects Section */
+        section {{ padding: 6rem 0; }}
+        .section-header {{
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 4rem;
         }}
+        .section-header h2 {{
+            font-size: 2.25rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+        }}
+        .section-line {{
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }}
+
         .grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
         }}
+        
         .project-card {{
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            transition: transform 0.2s;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }}
+        .project-card::before {{
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.3s;
         }}
         .project-card:hover {{
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            transform: translateY(-8px);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
         }}
-        .project-card h3 {{ margin-top: 0; margin-bottom: 0.5rem; }}
+        .project-card:hover::before {{ opacity: 1; }}
+
+        .project-card h3 {{
+            font-size: 1.4rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }}
         .project-card .tech {{
-            color: #60a5fa;
-            font-size: 0.85rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.25rem;
+            font-weight: 700;
+        }}
+        .project-card p {{
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
         }}
         .project-card .impact {{
-            font-size: 0.9rem;
-            color: #a78bfa;
+            color: #e2e8f0;
             margin-top: auto;
-            padding-top: 1rem;
+            border-left: 3px solid var(--secondary);
+            padding-left: 1rem;
+            font-style: italic;
+            background: rgba(139, 92, 246, 0.05);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
         }}
+
         .card-footer {{
             display: flex;
             gap: 1rem;
-            margin-top: 1.5rem;
-            align-items: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
         }}
-        .gh-btn, .demo-btn {{
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+        .btn {{
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             font-size: 0.9rem;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
+            cursor: pointer;
         }}
         .gh-btn {{
-            background: #334155;
-            color: white;
-            border: 1px solid #475569;
+            background: transparent;
+            color: #fff;
+            border: 1px solid var(--border);
         }}
-        .gh-btn:hover {{ background: #475569; }}
+        .gh-btn:hover {{
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+        }}
         .demo-btn {{
-            background: var(--accent);
-            color: white;
+            background: var(--text-main);
+            color: var(--bg-dark);
+            border: 1px solid transparent;
         }}
-        .demo-btn:hover {{ background: var(--accent-hover); }}
+        .demo-btn:hover {{
+            background: #d1d5db;
+            transform: scale(1.02);
+        }}
+
         footer {{
             text-align: center;
-            padding: 2rem;
-            color: var(--text-muted);
-            border-top: 1px solid #334155;
-            margin-top: 4rem;
+            padding: 3rem;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+        }}
+        
+        @media (max-width: 768px) {{
+            h1 {{ font-size: 3rem; }}
+            header {{ padding: 5rem 0 3rem 0; }}
+            .grid {{ grid-template-columns: 1fr; }}
         }}
     </style>
 </head>
 <body>
     <header>
         <div class="container">
+            <div class="hero-badge">Curated Engineering Portfolio</div>
             <h1>{name}</h1>
             <p class="summary">{summary}</p>
             <div class="skills">
@@ -358,7 +461,10 @@ def _render_portfolio_html(user: dict, summary: str, projects: list[dict], secur
 
     <div class="container">
         <section id="projects">
-            <h2>Featured Projects</h2>
+            <div class="section-header">
+                <h2>Featured Projects</h2>
+                <div class="section-line"></div>
+            </div>
             <div class="grid">
                 {projects_html}
             </div>
@@ -366,7 +472,7 @@ def _render_portfolio_html(user: dict, summary: str, projects: list[dict], secur
     </div>
 
     <footer>
-        <p>Built with OrchestrAI</p>
+        <p>Built autonomously by OrchestrAI</p>
     </footer>
 </body>
 </html>"""
@@ -434,14 +540,21 @@ def run_portfolio_builder_agent():
     # 2. Generate Summary
     skills = user.get("skills", user.get("resume_skills", ["Python", "Machine Learning"]))
     career_goals = user.get("career_goals", ["AI Engineer"])
-    summary = _generate_summary(user.get("name", ""), skills, career_goals)
+    
+    resume_text = ""
+    try:
+        resume_text = download_and_extract()
+    except Exception as exc:
+        logger.warning(f"PortfolioBuilderAgent: Failed to fetch resume - {exc}")
+        
+    summary = _generate_summary(user.get("name", ""), skills, career_goals, resume_text)
     
     # 3. Generate Project info
     project_list = []
     for repo in repos:
         name = repo.get("name")
         readme = _get_readme(github_username, name)
-        desc = _generate_project_description(repo, readme)
+        desc = _generate_project_description(repo, readme, resume_text)
         
         has_demo = any(topic in repo.get("topics", []) for topic in ["streamlit", "fastapi", "flask"]) or \
                    any(tech in str(desc.get("technologies") or "").lower() for tech in ["streamlit", "fastapi", "flask"])

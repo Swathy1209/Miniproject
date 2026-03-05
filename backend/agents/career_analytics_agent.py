@@ -34,6 +34,8 @@ from backend.github_yaml_db import (
     read_yaml_from_github,
     write_yaml_to_github,
     append_log_entry,
+    _get_raw_file,
+    _put_raw_file,
 )
 
 load_dotenv()
@@ -448,14 +450,11 @@ def run_career_analytics_agent() -> str:
         generated_at=generated_at,
     )
 
-    # Always write to ./data/... (cwd-relative, writable on Render)
-    # DATA_DIR=/data is READ-ONLY on Render free tier — never use it
-    analytics_dir = os.path.join(".", "data", "frontend", "analytics")
-    os.makedirs(analytics_dir, exist_ok=True)
-
-    local_path = os.path.join(analytics_dir, "dashboard.html")
-    with open(local_path, "w", encoding="utf-8") as f:
-        f.write(html)
+    # Write HTML file via GitHub Persistence layer
+    file_path = "frontend/analytics/index.html"
+    _, sha = _get_raw_file(file_path)
+    ts = datetime.now(timezone.utc).isoformat()
+    _put_raw_file(file_path, html, sha, f"feat(analytics): updated dashboard — {ts}")
 
     base_url      = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
     dashboard_url = f"{base_url}/analytics"

@@ -30,6 +30,8 @@ from backend.github_yaml_db import (
     read_yaml_from_github,
     write_yaml_to_github,
     append_log_entry,
+    _get_raw_file,
+    _put_raw_file,
 )
 
 load_dotenv()
@@ -455,16 +457,15 @@ def run_interview_coach_agent() -> list[dict]:
     user_name  = user.get("name", DEFAULT_USER_NAME)
     user_skills = user.get("resume_skills", DEFAULT_SKILLS)
 
-    # Always write to ./data/... (cwd-relative, writable on Render)
-    # DATA_DIR=/data is READ-ONLY on Render free tier — never use it
-    interview_dir = os.path.join(".", "data", "frontend", "interview")
+    from backend.github_yaml_db import DATA_DIR
+    interview_dir = os.path.join(DATA_DIR, "frontend", "interview")
     os.makedirs(interview_dir, exist_ok=True)
 
     base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
     index    = []
     generated = 0
 
-    for job in jobs[:15]:  # Cap at 15 to manage LLM calls
+    for job in jobs:  # Process all internships as requested
         if not isinstance(job, dict):
             continue
 
@@ -484,9 +485,12 @@ def run_interview_coach_agent() -> list[dict]:
             )
 
             slug = f"{_slugify(company)}_{_slugify(role)}"
-            local_path = os.path.join(interview_dir, f"{slug}.html")
-            with open(local_path, "w", encoding="utf-8") as f:
-                f.write(html)
+            file_name = f"{slug}.html"
+            file_path = f"frontend/interview/{file_name}"
+            
+            _, sha = _get_raw_file(file_path)
+            ts = datetime.now(timezone.utc).isoformat()
+            _put_raw_file(file_path, html, sha, f"feat(interview): generated for {company} — {ts}")
 
             interview_url = f"{base_url}/interview/{slug}.html"
             index.append({
