@@ -21,8 +21,6 @@ from backend.github_yaml_db import (
     read_yaml_from_github,
     write_yaml_to_github,
     append_log_entry,
-    _get_raw_file,
-    _put_raw_file,
 )
 
 load_dotenv()
@@ -203,6 +201,11 @@ def run_per_internship_portfolio_agent() -> list[dict]:
     cl_list = cl_data.get("cover_letters", []) if isinstance(cl_data, dict) else []
     cl_lookup = {(item.get("company"), item.get("role")): item.get("link", "") for item in cl_list if isinstance(item, dict)}
 
+    # Write HTML to Render's local filesystem — served by /portfolio static mount
+    DATA_DIR = os.getenv("DATA_DIR", ".")
+    internships_dir = os.path.join(DATA_DIR, "frontend", "portfolio", "internships")
+    os.makedirs(internships_dir, exist_ok=True)
+
     base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
     index = []
     generated = 0
@@ -226,33 +229,39 @@ def run_per_internship_portfolio_agent() -> list[dict]:
                 cover_letter_link=cl_link
             )
             slug = f"{_slugify(company)}_{_slugify(role)}"
-            # Save to GitHub repo so it's accessible via raw URL
-            github_username = os.getenv("GITHUB_USERNAME", "Swathy1209")
-            github_repo = os.getenv("GITHUB_REPO", "orchestrai-db")
-            file_path = f"portfolios/{slug}.html"
-            _, sha = _get_raw_file(file_path)
-            _put_raw_file(file_path, html, sha, f"feat: per-internship portfolio for {company} {role}")
 
-            # Use GitHub raw URL so it's immediately accessible
-            pub_url = f"https://raw.githubusercontent.com/{github_username}/{github_repo}/main/{file_path}"
-            # Wrap in htmlpreview.github.io for rendered HTML
-            rendered_url = f"https://htmlpreview.github.io/?{pub_url}"
-            index.append({"company": company, "role": role, "portfolio_url": rendered_url})
+            # Write HTML file locally — Render serves /portfolio → DATA_DIR/frontend/portfolio/
+            local_path = os.path.join(internships_dir, f"{slug}.html")
+            with open(local_path, "w", encoding="utf-8") as f:
+                f.write(html)
+
+            # URL via Render's static file server
+            pub_url = f"{base_url}/portfolio/internships/{slug}.html"
+            index.append({"company": company, "role": role, "portfolio_url": pub_url})
             generated += 1
-            logger.info("PerInternshipPortfolioAgent: ✓ %s — %s", company, role)
+            logger.info("PerInternshipPortfolioAgent: ✓ %s — %s → %s", company, role, pub_url)
         except Exception as exc:
             logger.error("PerInternshipPortfolioAgent: Failed for %s %s - %s", company, role, exc)
 
-    write_yaml_to_github(PER_INTERNSHIP_INDEX_FILE, {"per_internship_portfolios": index})
-    append_log_entry({
-        "agent": "PerInternshipPortfolioAgent",
-        "action": f"Generated {generated} per-internship portfolio pages",
-        "status": "success" if generated > 0 else "partial",
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-    })
+    # Save index to GitHub so ExecutionAgent can read pre-built URLs
+    try:
+        write_yaml_to_github(PER_INTERNSHIP_INDEX_FILE, {"per_internship_portfolios": index})
+    except Exception as exc:
+        logger.error("PerInternshipPortfolioAgent: Failed to save index YAML - %s", exc)
+
+    try:
+        append_log_entry({
+            "agent": "PerInternshipPortfolioAgent",
+            "action": f"Generated {generated} per-internship portfolio pages",
+            "status": "success" if generated > 0 else "partial",
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        })
+    except Exception:
+        pass
 
     logger.info("PerInternshipPortfolioAgent: Done. %d pages generated.", generated)
     return index
+
 
 
 if __name__ == "__main__":

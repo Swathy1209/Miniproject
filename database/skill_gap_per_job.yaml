@@ -1,0 +1,400 @@
+job_skill_analysis:
+- company: RefinedScience
+  role: Data Engineering Intern
+  missing_skills:
+  - Git
+  roadmap:
+  - Learn Git via official documentation and project practice
+- company: Cylinder Health
+  role: Junior Data Engineer
+  missing_skills:
+  - AWS
+  - Airflow
+  - Azure
+  - GCP
+  - Git
+  roadmap:
+  - Learn AWS (SageMaker, S3, EC2) — cloud deployment for ML
+  - Master Apache Airflow — schedule and monitor data pipelines
+  - Learn Azure ML — Microsoft enterprise cloud AI platform
+  - Learn GCP (Vertex AI, BigQuery) — Google cloud ML stack
+  - Learn Git via official documentation and project practice
+- company: Tinder
+  role: Machine Learning Engineer Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Handshake
+  role: AI/Machine Learning Engineer Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Cvent
+  role: Data Science Intern (Summer 2026)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Transcarent
+  role: Machine Learning Engineer Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Lensa
+  role: Data Science Summer Intern (Remote & Paid)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Tatari
+  role: Data Science, Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Generate:Biomedicines
+  role: Machine Learning Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Moloco
+  role: Machine Learning Engineer Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: TikTok
+  role: (General Hire) Machine Learning Engineer Intern (TikTok-Recommendation) -
+    2026 Summer (BS/MS)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Typeface
+  role: ML Engineer Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: TikTok
+  role: Machine Learning Engineer Intern - TikTok Search E-Commerce team - 2026 Summer
+    (BS/MS)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Lightmatter
+  role: Machine Learning Research Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: PathAI
+  role: Machine Learning Intern/Co-op (Summer/Fall 2026)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Lensa
+  role: Machine Learning Science Intern - Summer 2026 Start
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Lensa
+  role: Machine Learning Intern - Summer 2026
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Go Offer
+  role: Data Analyst
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: AUMOVIO
+  role: Data Analysis Intern (Yearlong)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: ZURU Toys
+  role: Data Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Aday
+  role: Data Analysis Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Toshiba America Electronic Components, Inc.
+  role: 5039 Data Analyst Engineering Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Okta for Developers
+  role: Data Analyst Intern (Summer 2026)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Anne Klein Official
+  role: Data Analyst Internship Spring 2026
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Sloan
+  role: Data Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: ARM Institute
+  role: Data Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Cornerstone Building Brands
+  role: Data Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Go Offer
+  role: Business Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: TikTok
+  role: Business Analyst Project Intern - Monetization Strategy & Operations - 2026
+    Start (BS/MS)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: TikTok
+  role: Business Analyst Project Intern (GBS SMB) - 2026 Start (BS/MS)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Lensa
+  role: Business Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Bellwood
+  role: Business Analyst / QA Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Maximus
+  role: Business Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Apollo Mission Critical Engineering
+  role: Multiple U.S Locations - Business Analyst Intern (BA-I) - Summer 2026
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: MTX Group
+  role: Business Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Stripe
+  role: Data Analyst, Intern (Master's degree)
+  missing_skills:
+  - R
+  roadmap:
+  - Learn R via official documentation and project practice
+- company: Stripe
+  role: PhD Machine Learning Engineer, Intern
+  missing_skills:
+  - Scala
+  - Spark
+  roadmap:
+  - Learn Scala via official documentation and project practice
+  - Learn Apache Spark/ PySpark — large-scale data processing
+- company: Storybizz Media Private Limited
+  role: Artificial Intelligence (AI)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: FiftySeven
+  role: Data Engineer
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Unknown
+  role: Data Science Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Innoknowvex
+  role: Data Science
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Primetrade.ai
+  role: Artificial Intelligence (AI)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Infinity Assurance Solutions Private Limited
+  role: Computer Vision
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Emoolar Technology Private Limited
+  role: Artificial Intelligence (AI)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Unknown
+  role: Machine Learning Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Symonis
+  role: Machine Learning
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Unknown
+  role: Artificial Intelligence Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Catch Sports Analytics
+  role: Sports Data Analyst
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Aviate Manpower
+  role: Data Science
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Career Solutions
+  role: Data Science
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Siemens Healthcare Private Limited
+  role: Data Engineer
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Ingram Micro
+  role: Data Analyst
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Lensa
+  role: Data Science Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Cohere
+  role: Machine Learning Intern/Co-op  (Spring 2026)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Woven by Toyota
+  role: Machine Learning Engineer, Behavior (Internship)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Samsung Ads
+  role: Deep Learning Internship - Summer 2026
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: d-Matrix
+  role: Machine Learning Research Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Samsung Ads
+  role: Deep Learning / GenAI Internship - Summer 2026
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: ByteDance
+  role: Machine Learning Engineer Intern (E-commerce-Recommendation) - 2026 Start
+    (PhD)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Johns Hopkins Applied Physics Laboratory
+  role: 2026 Internship  – Artificial Intelligence and Machine Learning (AI/ML) Research
+    Assistant
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Matson Logistics
+  role: AI & Machine Learning Intern – Operations
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: TikTok
+  role: Data Analyst Intern (TikTok Shop AMS Data Science) - 2026 Summer (BS/MS)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Moloco
+  role: Data Science Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Metropolitan Transportation Authority
+  role: Data Analyst (Power), Emerging Talent Intern (Summer)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Plymouth Rock Assurance
+  role: Data Engineer Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: TikTok
+  role: Business Analyst Intern (Business Integrity) - 2026 Summer (BS/MS)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Bankers Financial Corporation
+  role: Business Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Credibly
+  role: Intern - Data Science/Analyst (Hybrid in NY)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Hughes
+  role: ML Engineering Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: The Institute for Advanced Learning and Research
+  role: Artificial Intelligence / Machine Learning Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Airbnb
+  role: Machine Learning Engineering Intern (PhD)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Veolia
+  role: Business Analyst Intern
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Lensa
+  role: Business Analyst (Intern) - United States
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Zuneko Labs
+  role: Artificial Intelligence (AI)
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Mindenious Edutech
+  role: Data Science
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!
+- company: Emoolar Technology Private Limited
+  role: Data Science
+  missing_skills: []
+  roadmap:
+  - No skill gaps detected. You are well-equipped for this role!

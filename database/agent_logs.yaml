@@ -564,3 +564,32 @@ logs:
   action: Pipeline execution completed and email sent
   status: success
   timestamp: '2026-03-04T07:55:03'
+- agent: CareerAgent
+  action: Fetch started
+  level: INFO
+  timestamp: '2026-03-05T04:00:14'
+- agent: CareerAgent
+  action: 103 jobs fetched
+  level: INFO
+  timestamp: '2026-03-05T04:00:36'
+- agent: CareerAgent
+  action: 103 jobs fetched, 59 relevant
+  level: INFO
+  timestamp: '2026-03-05T04:00:46'
+- agent: CareerAgent
+  action: Stored in GitHub YAML
+  level: INFO
+  timestamp: '2026-03-05T04:00:47'
+- agent: CareerAgent
+  action: Email delegation passed to ExecutionAgent
+  level: INFO
+  timestamp: '2026-03-05T04:00:47'
+- agent: SkillAgent
+  action: SkillAgent run initiated
+  status: success
+  timestamp: '2026-03-05T04:00:47'
+- agent: SkillAgent
+  action: Skill gap analysis complete
+  status: success
+  timestamp: '2026-03-05T04:01:00'
+  details: Analyzed 76 jobs.
