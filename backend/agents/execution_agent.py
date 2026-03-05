@@ -466,10 +466,10 @@ def run_orchestrai_pipeline():
           </div>
           <div style="flex:1;min-width:200px">
             <p style="font-size:12px;color:#555;margin:0">
-              <b>Skill Coverage:</b> {cr.get('components',{}).get('skill_coverage',{{}}).get('score',0):.0f}/100 &nbsp;|&nbsp;
-              <b>Portfolio:</b> {cr.get('components',{}).get('portfolio_strength',{{}}).get('score',0):.0f}/100 &nbsp;|&nbsp;
-              <b>Practice:</b> {cr.get('components',{}).get('interview_practice',{{}}).get('score',0):.0f}/100 &nbsp;|&nbsp;
-              <b>Security:</b> {cr.get('components',{}).get('security_health',{{}}).get('score',0):.0f}/100
+              <b>Skill Coverage:</b> {cr.get('components', dict()).get('skill_coverage', dict()).get('score', 0):.0f}/100 &nbsp;|&nbsp;
+              <b>Portfolio:</b> {cr.get('components', dict()).get('portfolio_strength', dict()).get('score', 0):.0f}/100 &nbsp;|&nbsp;
+              <b>Practice:</b> {cr.get('components', dict()).get('interview_practice', dict()).get('score', 0):.0f}/100 &nbsp;|&nbsp;
+              <b>Security:</b> {cr.get('components', dict()).get('security_health', dict()).get('score', 0):.0f}/100
             </p>
           </div>
         </div>
