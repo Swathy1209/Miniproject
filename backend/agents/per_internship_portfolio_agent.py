@@ -28,7 +28,7 @@ logger = logging.getLogger("OrchestrAI.PerInternshipPortfolioAgent")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", ""))
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-openai_client = OpenAI(api_key=GEMINI_API_KEY, base_url=GEMINI_BASE_URL) if GEMINI_API_KEY else None
+openai_client = OpenAI(api_key=GEMINI_API_KEY, base_url=GEMINI_BASE_URL, max_retries=0) if GEMINI_API_KEY else None
 
 JOBS_FILE = "database/jobs.yaml"
 PORTFOLIO_FILE = "database/portfolio.yaml"

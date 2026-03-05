@@ -23,7 +23,8 @@ logger = logging.getLogger("OrchestrAI.RepoSecurityScannerAgent")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", ""))
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-openai_client = OpenAI(api_key=GEMINI_API_KEY, base_url=GEMINI_BASE_URL) if GEMINI_API_KEY else None
+openai_client = OpenAI(api_key=GEMINI_API_KEY, base_url=GEMINI_BASE_URL, max_retries=0) if GEMINI_API_KEY else None
+from backend.utils.ai_engine import safe_llm_call as _safe_llm_call
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 USERS_FILE = "database/users.yaml"
