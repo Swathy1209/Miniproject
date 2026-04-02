@@ -69,7 +69,7 @@ openai_client: Optional[OpenAI] = OpenAI(
 ) if OPENAI_API_KEY else None
 
 # Import shared circuit breaker from ai_engine
-from backend.utils.ai_engine import safe_llm_call, _is_daily_quota_error, _mark_quota_exceeded, _AI_QUOTA_EXCEEDED
+from backend.utils.ai_engine import safe_llm_call, _is_daily_quota_error, _mark_quota_exceeded, is_all_quota_exhausted
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Domain configuration
@@ -206,12 +206,11 @@ def _company_via_llm(role: str, apply_link: str, description: str = "") -> str:
         f"Role: {role}\nURL: {apply_link}\nDescription snippet: {description[:200]}"
     )
     try:
-        resp = openai_client.chat.completions.create(
-            model="gemini-2.0-flash",
+        name = safe_llm_call(
             messages=[{"role": "user", "content": prompt}],
             max_tokens=20, temperature=0,
+            context="company extraction"
         )
-        name = resp.choices[0].message.content.strip().strip('"').strip("'")
         if name and 2 < len(name) < 60 and name.lower() not in ("unknown", "n/a", "none", ""):
             return name
     except Exception:
@@ -651,7 +650,7 @@ def filter_jobs_ai(jobs: list[dict]) -> list[dict]:
     # Import here to get the live module-level flag value each time
     import backend.utils.ai_engine as _ai_eng
 
-    if not openai_client or not jobs or _ai_eng._AI_QUOTA_EXCEEDED:
+    if not openai_client or not jobs or _ai_eng.is_all_quota_exhausted():
         logger.info("CareerAgent: No LLM / quota exceeded — using keyword fallback for all jobs.")
         return [j for j in jobs if _keyword_prefilter(j.get("role", ""))]
 
@@ -661,7 +660,7 @@ def filter_jobs_ai(jobs: list[dict]) -> list[dict]:
 
     for start in range(0, len(jobs), BATCH):
         # Check circuit breaker before each batch
-        if _ai_eng._AI_QUOTA_EXCEEDED:
+        if _ai_eng.is_all_quota_exhausted():
             logger.warning("CareerAgent: Circuit breaker open — keyword fallback for remaining batches.")
             relevant.extend([j for j in jobs[start:] if _keyword_prefilter(j.get("role", ""))])
             break
@@ -707,7 +706,7 @@ def filter_jobs_ai(jobs: list[dict]) -> list[dict]:
             for idx in sorted(indices):
                 relevant.append(batch[idx])
 
-        if start + BATCH < len(jobs) and not _ai_eng._AI_QUOTA_EXCEEDED:
+        if start + BATCH < len(jobs) and not _ai_eng.is_all_quota_exhausted():
             time.sleep(1)  # Reduced from 2s to 1s — breaker handles quota errors now
 
     logger.info("CareerAgent: %d / %d jobs passed relevance filter.", len(relevant), len(jobs))

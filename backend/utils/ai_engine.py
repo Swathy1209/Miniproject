@@ -54,6 +54,10 @@ def _mark_quota_exceeded(model: str) -> None:
             "AIEngine: 🚨 Model '%s' daily quota exhausted. Switching to fallbacks.", model
         )
 
+def is_all_quota_exhausted() -> bool:
+    """Check if all configured Gemini models have exhausted their daily quota."""
+    return all(m in _EXHAUSTED_MODELS for m in GEMINI_MODELS)
+
 def safe_llm_call(
     messages: list[dict],
     max_tokens: int = 400,
