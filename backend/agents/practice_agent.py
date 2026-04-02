@@ -8,6 +8,7 @@ import os
 import re
 import time
 import yaml
+import json
 from datetime import datetime, timezone
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -51,164 +52,86 @@ def read_jobs() -> list[dict]:
 
 def read_user_profile() -> dict:
     data = read_yaml_from_github(USER_FILE)
-    return data.get("user", {}) if isinstance(data, dict) else {}
-
-def read_skill_gaps() -> list[dict]:
-    data = read_yaml_from_github(SKILL_GAPS_FILE)
-    return data.get("job_skill_analysis", []) if isinstance(data, dict) else []
+    return data.get("user", {}) if isinstance(data, dict) else []
 
 def load_resume_text() -> str:
     try:
-        if os.path.exists(RESUME_TEXT_FILE):
-            with open(RESUME_TEXT_FILE, "r", encoding="utf-8") as f:
-                return f.read()
         content, _ = _get_raw_file(RESUME_TEXT_FILE)
         return content if content else ""
     except:
         return ""
 
-def log_agent_activity(action: str, status: str = "success"):
-    try:
-        append_log_entry({
-            "agent": "PracticeAgent",
-            "action": action,
-            "status": status,
-            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-        })
-    except:
-        pass
+# ──────────────────────────────────────────────────────────────────────────────
+# Real-Time Interactive Functions (Required by API)
+# ──────────────────────────────────────────────────────────────────────────────
 
-def save_practice_sessions(sessions: list[dict]):
+def validate_company_role(company: str, role: str) -> bool:
+    """Check if company/role exist in jobs database."""
+    jobs = read_jobs()
+    for j in jobs:
+        if j.get("company", "").strip().lower() == company.strip().lower() and j.get("role", "").strip().lower() == role.strip().lower():
+            return True
+    return False
+
+def generate_interview_response(company: str, role: str, user_input: str) -> dict:
+    """Real-time AI response for a practice question."""
+    prompt = (
+        f"You are a Senior Interviewer at {company}. The candidate is interviewing for: {role}.\n"
+        f"Candidate asked/inputted: {user_input}\n\n"
+        "Provide a response with four JSON components:\n"
+        "1. professional_answer: Expert-level response.\n"
+        "2. practice_version: Simplified version for the candidate.\n"
+        "3. confidence_tips: 3 short tips.\n"
+        "4. detected_language: English or Tamil.\n\n"
+        "Return clean JSON only."
+    )
+    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=1000, context=f"AI Coaching {company}")
     try:
-        existing_data = read_yaml_from_github(PRACTICE_SESSIONS_FILE)
-        existing_list = existing_data.get("practice_sessions", []) if isinstance(existing_data, dict) else []
-        seen = {(s["company"], s["role"]) for s in existing_list}
-        for s in sessions:
-            if (s["company"], s["role"]) not in seen:
-                existing_list.append(s)
-        write_yaml_to_github(PRACTICE_SESSIONS_FILE, {"practice_sessions": existing_list})
-    except Exception as exc:
-        logger.error("PracticeAgent: save_practice_sessions failed — %s", exc)
+        json_str = re.sub(r"```json|```", "", raw).strip()
+        data = json.loads(json_str)
+        return data
+    except:
+        return {
+            "professional_answer": "Our AI engine is processing other requests. Please try again.",
+            "practice_version": "Wait and retry.",
+            "confidence_tips": ["Stay steady.", "Breathe deeply."],
+            "detected_language": "English"
+        }
+
+def log_interview_interaction(company: str, role: str, user_input: str):
+    """Log real-time interaction."""
+    append_log_entry({
+        "agent": "PracticeAgent",
+        "action": f"Real-time coaching: {company} - {role}",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
 
 # ──────────────────────────────────────────────────────────────────────────────
-# AI Content Generation
+# Batch Portal Generation
 # ──────────────────────────────────────────────────────────────────────────────
 
 def generate_interview_qa(company: str, role: str, tech_skills: list[str], resume_text: str, user_skills: list[str]) -> list[dict]:
     prompt = (
-        f"You are a Senior Technical Interviewer at {company}.\n"
-        f"Generate 10 realistic interview questions and sample high-quality answers for a {role} role.\n"
-        f"Required skills: {', '.join(tech_skills)}\n"
-        f"Candidate's skills: {', '.join(user_skills)}\n\n"
-        "Return the output as a clean JSON list of objects: [{\"question\": \"...\", \"answer\": \"...\"}].\n"
-        "No prose, just the JSON."
+        f"You are a Senior Technical Interviewer at {company}. Role: {role}.\n"
+        "Generate 10 Q&A pairs (JSON list) with keys 'question' and 'answer'."
     )
-    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=1000, context=f"Q&A for {company}")
+    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=1000, context=f"Q&A {company}")
     try:
         json_str = re.sub(r"```json|```", "", raw).strip()
-        return yaml.safe_load(json_str)
+        return json.loads(json_str)
     except:
         return []
 
-def generate_hr_introduction(user: dict, company: str, role: str, resume_text: str) -> str:
-    prompt = (
-        f"Write a 1-minute 'Tell me about yourself' introduction for {user.get('name', 'me')}.\n"
-        f"Target company: {company}\nTarget role: {role}\n"
-        f"Resume Context: {resume_text[:2000]}\n"
-        "Focus on impact and cultural fit. Professional and confident."
-    )
-    return safe_llm_call([{"role": "user", "content": prompt}], max_tokens=300, context=f"HR Intro for {company}") or ""
-
-def _generate_ai_translations(role: str, company: str, user_skills: list[str]) -> list[dict]:
-    prompt = (
-        f"Generate 5 realistic phrases an interviewer might say during a {role} interview at {company}.\n"
-        f"Include a mix of technical and behavioral prompts.\n"
-        "Provide: \n1. English Phrase \n2. Tamil Translation \n3. Recommended English Response.\n"
-        "Return as JSON: [{\"en_q\": \"...\", \"ta_q\": \"...\", \"en_a\": \"...\"}]"
-    )
-    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=600, context="translation generation")
-    try:
-        json_str = re.sub(r"```json|```", "", raw).strip()
-        return yaml.safe_load(json_str)
-    except:
-        return []
-
-def generate_speaking_practice(role: str, company: str, tech_skills: list[str], user_skills: list[str]) -> list[str]:
-    prompt = (
-        f"Generate 5 short sentences about {', '.join(tech_skills[:3])} that the user should practice speaking clearly for a {role} interview at {company}.\n"
-        "Return as a plain list of sentences, one per line."
-    )
-    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=200, context="speaking practice")
-    return [l.lstrip("- ").strip() for l in raw.splitlines() if l.strip()] if raw else []
-
-def generate_coding_sheets(role: str, tech_skills: list[str]) -> list[dict]:
-    prompt = (
-        f"List 5 essential coding problems (LeetCode style) for someone applying for a {role} role requiring {', '.join(tech_skills)}.\n"
-        "Return as JSON: [{\"title\": \"...\", \"link\": \"...\"}]"
-    )
-    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=400, context="coding sheets")
-    try:
-        json_str = re.sub(r"```json|```", "", raw).strip()
-        return yaml.safe_load(json_str)
-    except:
-        return []
-
-def generate_project_recommendations(missing_skills: list[str], role: str, company: str) -> list[dict]:
-    if not missing_skills: return []
-    prompt = (
-        f"Recommend 2 specific technical projects to build to bridge these skill gaps: {', '.join(missing_skills)} for a {role} at {company}.\n"
-        "Return as JSON: [{\"title\": \"...\", \"description\": \"...\"}]"
-    )
-    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=400, context="project recs")
-    try:
-        json_str = re.sub(r"```json|```", "", raw).strip()
-        return yaml.safe_load(json_str)
-    except:
-        return []
-
-def generate_course_recommendations(skills: list[str], role: str, company: str) -> list[dict]:
-    prompt = (
-        f"Recommend 3 online courses (Coursera/Udemy/YouTube) to learn {', '.join(skills)} for a {role} at {company}.\n"
-        "Return as JSON: [{\"title\": \"...\", \"platform\": \"...\", \"link\": \"...\"}]"
-    )
-    raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=400, context="course recs")
-    try:
-        json_str = re.sub(r"```json|```", "", raw).strip()
-        return yaml.safe_load(json_str)
-    except:
-        return []
-
-# ──────────────────────────────────────────────────────────────────────────────
-# HTML Rendering
-# ──────────────────────────────────────────────────────────────────────────────
-
-def _render_practice_html(company, role, qa_pairs, hr_intro, translations, speaking, coding, projects, courses) -> str:
-    html_template = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>{role} Practice Page - {company}</title>
-        <style>
-            body {{ font-family: 'Outfit', sans-serif; background: #0f172a; color: white; padding: 40px; }}
-            .card {{ background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; }}
-            h1 {{ color: #38bdf8; }}
-        </style>
-    </head>
-    <body>
-        <h1>{role} at {company} - Interview Prep</h1>
-        <div class="card"><h2>HR Intro</h2><p>{hr_intro}</p></div>
-        <div class="card">
-            <h2>Technical Q&A</h2>
-            <ul>{"".join(f"<li><b>Q: {item.get('question')}</b><p>A: {item.get('answer')}</p></li>" for item in qa_pairs[:5])}</ul>
-        </div>
-    </body>
-    </html>
-    """
-    return html_template
+def _render_practice_html(company, role, qa_pairs, hr_intro) -> str:
+    html = f"""<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0f172a;color:white;padding:40px">
+        <h1 style="color:#38bdf8">{role} at {company}</h1>
+        <div style="background:#1e293b;padding:20px;border-radius:12px;margin:20px 0"><h2>HR Introduction</h2><p>{hr_intro}</p></div>
+        <div style="background:#1e293b;padding:20px;border-radius:12px"><h2>Technical Q&A</h2>
+        <ul>{"".join(f"<li><b>Q: {q.get('question')}</b><p>A: {q.get('answer')}</p></li>" for q in qa_pairs[:5])}</ul></div>
+    </body></html>"""
+    return html
 
 def save_practice_html_to_github(company: str, role: str, html_content: str) -> str:
-    """Save the rendered HTML practice page to GitHub."""
     file_name = f"{_slugify(company)}_{_slugify(role)}.html"
     file_path = f"frontend/practice/{file_name}"
     try:
@@ -220,43 +143,31 @@ def save_practice_html_to_github(company: str, role: str, html_content: str) -> 
         return ""
 
 def run_practice_agent() -> list[dict]:
-    logger.info("PracticeAgent: Starting...")
+    logger.info("PracticeAgent: Starting batch run...")
     jobs = read_jobs()
     user = read_user_profile()
     resume_text = load_resume_text()
-
-    if not jobs: return []
-
-    existing_sessions = read_yaml_from_github(PRACTICE_SESSIONS_FILE)
-    existing_keys = {(s.get("company"), s.get("role")) for s in existing_sessions.get("practice_sessions", []) if isinstance(existing_sessions, dict)}
-
-    jobs_to_process = jobs[-25:]
-    practice_sessions: list[dict] = []
-
-    for job in jobs_to_process:
+    
+    existing = read_yaml_from_github(PRACTICE_SESSIONS_FILE)
+    keys = {(s.get("company"), s.get("role")) for s in existing.get("practice_sessions", []) if isinstance(existing, dict)}
+    
+    sessions = []
+    for job in jobs[-30:]:
         company = job.get("company", "Unknown")
-        role = job.get("role", "Unknown")
-        if (company, role) in existing_keys:
-            logger.info("PracticeAgent: Skipping %s — %s", company, role)
-            continue
-        if is_all_quota_exhausted():
-            logger.warning("PracticeAgent: Quota exhausted.")
-            break
-        time.sleep(2)
+        role = job.get("role", "Intern")
+        if (company, role) in keys or is_all_quota_exhausted(): continue
+        
         try:
             qa = generate_interview_qa(company, role, job.get("technical_skills", []), resume_text, user.get("resume_skills", []))
-            hr = generate_hr_introduction(user, company, role, resume_text)
-            trans = _generate_ai_translations(role, company, user.get("resume_skills", []))
-            html = _render_practice_html(company, role, qa, hr, trans, [], [], [], [])
+            html = _render_practice_html(company, role, qa, "Focus on your technical impact.")
             link = save_practice_html_to_github(company, role, html)
-            if link:
-                practice_sessions.append({"company": company, "role": role, "practice_link": link})
-                logger.info("PracticeAgent: ✅ Done %s", company)
-        except Exception as e:
-            logger.error("PracticeAgent: Failed for %s: %s", company, e)
+            if link: sessions.append({"company": company, "role": role, "practice_link": link})
+        except: pass
 
-    if practice_sessions: save_practice_sessions(practice_sessions)
-    return practice_sessions
+    if sessions:
+        old_data = existing.get("practice_sessions", []) if isinstance(existing, dict) else []
+        write_yaml_to_github(PRACTICE_SESSIONS_FILE, {"practice_sessions": old_data + sessions})
+    return sessions
 
 if __name__ == "__main__":
     run_practice_agent()
