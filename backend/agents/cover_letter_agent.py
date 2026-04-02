@@ -25,6 +25,7 @@ from backend.github_yaml_db import (
 load_dotenv()
 logger = logging.getLogger("OrchestrAI.CoverLetterAgent")
 USERS_FILE = "database/users.yaml"
+JOBS_FILE = "database/jobs.yaml"
 COVER_LETTER_INDEX_FILE = "database/cover_letter_index.yaml"
 
 # Default user profile for when users.yaml has no data

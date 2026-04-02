@@ -461,7 +461,11 @@ def run_interview_coach_agent() -> list[dict]:
     index    = []
     generated = 0
 
-    for job in jobs:
+    # Limit to top 10 most recent jobs to avoid daily quota exhaustion (1500 RPD)
+    jobs_to_process = jobs[-10:]
+    logger.info("InterviewCoachAgent: Processing %d most recent jobs.", len(jobs_to_process))
+
+    for job in jobs_to_process:
         if not isinstance(job, dict):
             continue
 

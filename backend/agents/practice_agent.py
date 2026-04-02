@@ -1181,7 +1181,9 @@ def save_practice_html_to_github(company: str, role: str, html_content: str) -> 
             sha,
             f"feat: generate practice portal for {company} {role} — {ts}",
         )
-        return _get_public_url(file_path)
+        # Use clean URL without 'frontend/' prefix since we'll mount /practice
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
+        return f"{base_url}/practice/{file_name}"
     except Exception as exc:
         logger.error("PracticeAgent: save_practice_html_to_github failed — %s", exc)
         return ""
@@ -1248,9 +1250,14 @@ def run_practice_agent() -> list[dict]:
         for item in skill_gaps_list if isinstance(item, dict)
     }
 
+    # Limit to top 10 most recent jobs to avoid daily quota exhaustion (1500 RPD)
+    # Each job here takes ~6 LLM calls. 10 jobs = 60 calls + other agents = Safe.
+    jobs_to_process = jobs[-10:]
+    logger.info("PracticeAgent: Processing %d most recent jobs.", len(jobs_to_process))
+
     practice_sessions: list[dict] = []
 
-    for job in jobs:
+    for job in jobs_to_process:
         if not isinstance(job, dict):
             continue
 

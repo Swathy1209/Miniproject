@@ -31,31 +31,28 @@ GEMINI_MODELS = [
     "gemini-2.0-flash",                               # fallback 2
 ]
 
-# ── Global Circuit Breaker ─────────────────────────────────────────────────
-# When the daily quota is exhausted, ALL subsequent LLM calls skip immediately
-# instead of retrying 3x each. This saves minutes of wasted time.
-_AI_QUOTA_EXCEEDED: bool = False
-_QUOTA_EXCEEDED_MODEL: str = ""
+# ── Per-Model Circuit Breaker ──────────────────────────────────────────────
+# When a model's daily quota is exhausted, we skip it for the rest of the run.
+_EXHAUSTED_MODELS: set[str] = set()
 
 def _is_daily_quota_error(exc: Exception) -> bool:
     """Detect RESOURCE_EXHAUSTED daily quota errors (not transient rate limits)."""
     msg = str(exc)
+    # Check for both "quota exceeded" and "limit: 0" which indicates free tier daily exhaustion
     return (
         "RESOURCE_EXHAUSTED" in msg
         or "GenerateRequestsPerDayPerProjectPerModel" in msg
+        or "Quota exceeded for metric" in msg
         or ('limit: 0' in msg and '429' in msg)
     )
 
 def _mark_quota_exceeded(model: str) -> None:
-    global _AI_QUOTA_EXCEEDED, _QUOTA_EXCEEDED_MODEL
-    _AI_QUOTA_EXCEEDED = True
-    _QUOTA_EXCEEDED_MODEL = model
-    logger.warning(
-        "AIEngine: 🚨 CIRCUIT BREAKER OPEN — Daily quota exhausted for %s. "
-        "All further LLM calls will use fallback for this pipeline run.", model
-    )
-
-import time
+    global _EXHAUSTED_MODELS
+    if model not in _EXHAUSTED_MODELS:
+        _EXHAUSTED_MODELS.add(model)
+        logger.warning(
+            "AIEngine: 🚨 Model '%s' daily quota exhausted. Switching to fallbacks.", model
+        )
 
 def safe_llm_call(
     messages: list[dict],
@@ -65,18 +62,11 @@ def safe_llm_call(
 ) -> str | None:
     """
     Central LLM call with:
-     - Circuit breaker (skip immediately if daily quota exceeded)
+     - Per-model circuit breaker (skip if daily quota exhausted)
      - Model fallback chain (tries each model before giving up)
-     - Retry logic for transient rate limits (429)
-     - No per-model retry on RESOURCE_EXHAUSTED daily quota
+     - Retry logic for transient rate limits (429 RPM)
     Returns the response text or None if all models fail.
     """
-    global _AI_QUOTA_EXCEEDED
-
-    if _AI_QUOTA_EXCEEDED:
-        logger.debug("AIEngine: Circuit breaker open — skipping LLM call for '%s'", context)
-        return None
-
     if not OPENAI_API_KEY:
         return None
 
@@ -84,6 +74,9 @@ def safe_llm_call(
     client = OpenAI(api_key=OPENAI_API_KEY, base_url=GEMINI_BASE_URL, max_retries=0)
 
     for model in GEMINI_MODELS:
+        if model in _EXHAUSTED_MODELS:
+            continue
+
         max_retries = 2
         for attempt in range(max_retries + 1):
             try:
@@ -96,22 +89,25 @@ def safe_llm_call(
                 return resp.choices[0].message.content.strip()
             except Exception as exc:
                 err_msg = str(exc)
+                
+                # 1. Handle Daily Quota Exhaustion
                 if _is_daily_quota_error(exc):
                     _mark_quota_exceeded(model)
-                    return None  # Circuit breaker opened — stop immediately
+                    break # Try next model
                 
+                # 2. Handle Transient Rate Limit (RPM)
                 if "429" in err_msg and attempt < max_retries:
-                    # Transient rate limit (per minute) — wait and retry same model
-                    wait_time = 4 * (attempt + 1)
-                    logger.warning("AIEngine: %s rate limited (429) for '%s'. Retrying in %ds...", model, context, wait_time)
+                    # Exponential backoff for RPM limits
+                    wait_time = 5 * (attempt + 1)
+                    logger.warning("AIEngine: %s RPM limited (429) for '%s'. Retrying in %ds...", model, context, wait_time)
                     time.sleep(wait_time)
                     continue
 
-                # For other errors or if retries exhausted, move to next model
-                logger.debug("AIEngine: %s failed for '%s', trying next model — %s", model, context, exc)
+                # 3. Handle other errors
+                logger.debug("AIEngine: %s failed for '%s' — %s", model, context, err_msg)
                 break
 
-    logger.warning("AIEngine: All models exhausted for '%s' — using fallback.", context)
+    logger.warning("AIEngine: ❌ ALL MODELS EXHAUSTED for '%s'.", context)
     return None
 
 # ── Known technical skill keywords for fallback extraction ────────────────────

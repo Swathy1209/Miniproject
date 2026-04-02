@@ -51,57 +51,75 @@ def download_resume_from_github(
 ) -> str | None:
     """
     Download the resume PDF from GitHub repo via REST API.
+    Falls back to checking local Disk if GitHub fails or is not configured.
 
     Args:
         resume_path: Path inside the GitHub repo  (e.g. "resumes/swathiga_resume.pdf")
         local_path:  Where to save it locally     (e.g. "temp_resume.pdf")
 
     Returns:
-        Absolute path to the downloaded file, or None on failure.
+        Absolute path to the downloaded/found file, or None on failure.
     """
-    url = f"{_BASE_URL}/repos/{_REPO_SLUG}/contents/{resume_path}"
-    logger.info("ResumeParser: Downloading '%s' from GitHub...", resume_path)
+    
+    # ── Try Local Check First (Fallback/Development) ──────────────────────────
+    # Check project-relative and current directory paths
+    possible_local_paths = [
+        resume_path,
+        os.path.join("MultiAgent_Project", resume_path),
+        os.path.join("backend", resume_path),
+        Path(resume_path).name # just the filename
+    ]
+    
+    for p in possible_local_paths:
+        if os.path.exists(p):
+            logger.info("ResumeParser: Found local resume at '%s' — bypassing GitHub fetch.", p)
+            # Copy to temp_resume.pdf if it's not already there
+            if str(Path(p).resolve()) != str(Path(local_path).resolve()):
+                Path(local_path).write_bytes(Path(p).read_bytes())
+            return str(Path(local_path).resolve())
 
-    try:
-        resp = requests.get(
-            url,
-            headers=_auth_headers(),
-            params={"ref": GITHUB_BRANCH},
-            timeout=30,
-        )
+    # ── Try GitHub Fetch ───────────────────────────────────────────────────────
+    if GITHUB_TOKEN and GITHUB_USERNAME and GITHUB_REPO:
+        url = f"{_BASE_URL}/repos/{_REPO_SLUG}/contents/{resume_path}"
+        logger.info("ResumeParser: Attempting to download '%s' from GitHub...", resume_path)
 
-        if resp.status_code == 404:
-            logger.error(
-                "ResumeParser: Resume not found at '%s' in repo '%s'. "
-                "Please upload it to orchestrai-db/resumes/",
-                resume_path, _REPO_SLUG,
+        try:
+            resp = requests.get(
+                url,
+                headers=_auth_headers(),
+                params={"ref": GITHUB_BRANCH},
+                timeout=30,
             )
-            return None
 
-        resp.raise_for_status()
-        data = resp.json()
+            if resp.status_code == 200:
+                data = resp.json()
+                # GitHub may return content in chunks for large files (download_url)
+                if data.get("encoding") == "base64" and data.get("content"):
+                    pdf_bytes = base64.b64decode(data["content"])
+                elif data.get("download_url"):
+                    # Fallback: direct download for large files
+                    dl_resp = requests.get(data["download_url"], timeout=60)
+                    dl_resp.raise_for_status()
+                    pdf_bytes = dl_resp.content
+                else:
+                    logger.error("ResumeParser: Could not decode file content from GitHub response.")
+                    return None
 
-        # GitHub may return content in chunks for large files (download_url)
-        if data.get("encoding") == "base64" and data.get("content"):
-            pdf_bytes = base64.b64decode(data["content"])
-        elif data.get("download_url"):
-            # Fallback: direct download for large files
-            logger.info("ResumeParser: File too large for inline API — using download_url.")
-            dl_resp = requests.get(data["download_url"], timeout=60)
-            dl_resp.raise_for_status()
-            pdf_bytes = dl_resp.content
-        else:
-            logger.error("ResumeParser: Could not decode file content from GitHub response.")
-            return None
+                abs_path = str(Path(local_path).resolve())
+                Path(local_path).write_bytes(pdf_bytes)
+                logger.info("ResumeParser: Resume saved to '%s' (%d bytes).", abs_path, len(pdf_bytes))
+                return abs_path
+            
+            elif resp.status_code == 404:
+                logger.warning("ResumeParser: Resume not found on GitHub at '%s'.", resume_path)
+            else:
+                logger.warning("ResumeParser: GitHub responded with %d", resp.status_code)
 
-        abs_path = str(Path(local_path).resolve())
-        Path(local_path).write_bytes(pdf_bytes)
-        logger.info("ResumeParser: Resume saved to '%s' (%d bytes).", abs_path, len(pdf_bytes))
-        return abs_path
-
-    except Exception as exc:
-        logger.error("ResumeParser: download_resume_from_github() failed — %s", exc)
-        return None
+        except Exception as exc:
+            logger.error("ResumeParser: download_resume_from_github() failed — %s", exc)
+    
+    logger.error("ResumeParser: ❌ Resume NOT FOUND locally or on GitHub.")
+    return None
 
 
 def extract_resume_text(pdf_path: str) -> str:
