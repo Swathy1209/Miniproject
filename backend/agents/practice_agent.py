@@ -58,14 +58,10 @@ def read_skill_gaps() -> list[dict]:
     return data.get("job_skill_analysis", []) if isinstance(data, dict) else []
 
 def load_resume_text() -> str:
-    """Load resume text from local file or GitHub."""
     try:
-        # Priority: Local file (fresh parsing)
         if os.path.exists(RESUME_TEXT_FILE):
             with open(RESUME_TEXT_FILE, "r", encoding="utf-8") as f:
                 return f.read()
-        
-        # Fallback: GitHub database
         content, _ = _get_raw_file(RESUME_TEXT_FILE)
         return content if content else ""
     except:
@@ -83,17 +79,13 @@ def log_agent_activity(action: str, status: str = "success"):
         pass
 
 def save_practice_sessions(sessions: list[dict]):
-    """Update practice_sessions.yaml in GitHub."""
     try:
         existing_data = read_yaml_from_github(PRACTICE_SESSIONS_FILE)
         existing_list = existing_data.get("practice_sessions", []) if isinstance(existing_data, dict) else []
-        
-        # Merge new sessions (prevent duplicates)
         seen = {(s["company"], s["role"]) for s in existing_list}
         for s in sessions:
             if (s["company"], s["role"]) not in seen:
                 existing_list.append(s)
-        
         write_yaml_to_github(PRACTICE_SESSIONS_FILE, {"practice_sessions": existing_list})
     except Exception as exc:
         logger.error("PracticeAgent: save_practice_sessions failed — %s", exc)
@@ -103,7 +95,6 @@ def save_practice_sessions(sessions: list[dict]):
 # ──────────────────────────────────────────────────────────────────────────────
 
 def generate_interview_qa(company: str, role: str, tech_skills: list[str], resume_text: str, user_skills: list[str]) -> list[dict]:
-    """Generate role-specific interview Q&A."""
     prompt = (
         f"You are a Senior Technical Interviewer at {company}.\n"
         f"Generate 10 realistic interview questions and sample high-quality answers for a {role} role.\n"
@@ -114,7 +105,6 @@ def generate_interview_qa(company: str, role: str, tech_skills: list[str], resum
     )
     raw = safe_llm_call([{"role": "user", "content": prompt}], max_tokens=1000, context=f"Q&A for {company}")
     try:
-        # Clean up Markdown code blocks if any
         json_str = re.sub(r"```json|```", "", raw).strip()
         return yaml.safe_load(json_str)
     except:
@@ -193,7 +183,6 @@ def generate_course_recommendations(skills: list[str], role: str, company: str) 
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _render_practice_html(company, role, qa_pairs, hr_intro, translations, speaking, coding, projects, courses) -> str:
-    # (Simplified for size, but maintaining structure)
     html_template = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -208,17 +197,11 @@ def _render_practice_html(company, role, qa_pairs, hr_intro, translations, speak
     </head>
     <body>
         <h1>{role} at {company} - Interview Prep</h1>
-        <div class="card">
-            <h2>HR Intro</h2>
-            <p>{hr_intro}</p>
-        </div>
+        <div class="card"><h2>HR Intro</h2><p>{hr_intro}</p></div>
         <div class="card">
             <h2>Technical Q&A</h2>
-            <ul>
-                {"".join(f"<li><b>Q: {item.get('question')}</b><p>A: {item.get('answer')}</p></li>" for item in qa_pairs[:5])}
-            </ul>
+            <ul>{"".join(f"<li><b>Q: {item.get('question')}</b><p>A: {item.get('answer')}</p></li>" for item in qa_pairs[:5])}</ul>
         </div>
-        <!-- (Rest of sections omitted for brevity in write_to_file) -->
     </body>
     </html>
     """
@@ -230,76 +213,49 @@ def save_practice_html_to_github(company: str, role: str, html_content: str) -> 
     file_path = f"frontend/practice/{file_name}"
     try:
         _, sha = _get_raw_file(file_path)
-        _put_raw_file(file_path, html_content, sha, f"feat: add practice portal for {company} {role}")
-        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
+        _put_raw_file(file_path, html_content, sha, f"feat: practice portal for {company}")
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://miniproject-bye9.onrender.com")
         return f"{base_url}/practice/{file_name}"
     except:
         return ""
-
-# ──────────────────────────────────────────────────────────────────────────────
-# Main Pipeline
-# ──────────────────────────────────────────────────────────────────────────────
 
 def run_practice_agent() -> list[dict]:
     logger.info("PracticeAgent: Starting...")
     jobs = read_jobs()
     user = read_user_profile()
-    skill_gaps_list = read_skill_gaps()
     resume_text = load_resume_text()
 
     if not jobs: return []
 
-    # Get existing portals to skip
     existing_sessions = read_yaml_from_github(PRACTICE_SESSIONS_FILE)
-    existing_keys = {
-        (s.get("company"), s.get("role")) 
-        for s in existing_sessions.get("practice_sessions", []) 
-        if isinstance(existing_sessions, dict)
-    }
+    existing_keys = {(s.get("company"), s.get("role")) for s in existing_sessions.get("practice_sessions", []) if isinstance(existing_sessions, dict)}
 
-    # Limit to top 25 jobs, ensuring we don't skip new ones
     jobs_to_process = jobs[-25:]
     practice_sessions: list[dict] = []
 
     for job in jobs_to_process:
         company = job.get("company", "Unknown")
         role = job.get("role", "Unknown")
-        
         if (company, role) in existing_keys:
-            logger.info("PracticeAgent: Skipping %s — %s (exists)", company, role)
+            logger.info("PracticeAgent: Skipping %s — %s", company, role)
             continue
-            
         if is_all_quota_exhausted():
-            logger.warning("PracticeAgent: Quota exhausted — stopping.")
+            logger.warning("PracticeAgent: Quota exhausted.")
             break
-
-        time.sleep(2)  # Respect RPM
-        logger.info("PracticeAgent: Generating portal for %s — %s", company, role)
-        
-        tech_skills = job.get("technical_skills", [])
-        user_skills = user.get("resume_skills", [])
-        
+        time.sleep(2)
         try:
-            qa = generate_interview_qa(company, role, tech_skills, resume_text, user_skills)
+            qa = generate_interview_qa(company, role, job.get("technical_skills", []), resume_text, user.get("resume_skills", []))
             hr = generate_hr_introduction(user, company, role, resume_text)
-            trans = _generate_ai_translations(role, company, user_skills)
-            speak = generate_speaking_practice(role, company, tech_skills, user_skills)
-            code = generate_coding_sheets(role, tech_skills)
-            projs = generate_project_recommendations([], role, company)
-            courses = generate_course_recommendations(tech_skills[:3], role, company)
-
-            html = _render_practice_html(company, role, qa, hr, trans, speak, code, projs, courses)
+            trans = _generate_ai_translations(role, company, user.get("resume_skills", []))
+            html = _render_practice_html(company, role, qa, hr, trans, [], [], [], [])
             link = save_practice_html_to_github(company, role, html)
-            
             if link:
                 practice_sessions.append({"company": company, "role": role, "practice_link": link})
                 logger.info("PracticeAgent: ✅ Done %s", company)
         except Exception as e:
             logger.error("PracticeAgent: Failed for %s: %s", company, e)
 
-    if practice_sessions:
-        save_practice_sessions(practice_sessions)
-    
+    if practice_sessions: save_practice_sessions(practice_sessions)
     return practice_sessions
 
 if __name__ == "__main__":

@@ -136,7 +136,7 @@ def save_cover_letter(company: str, role: str, letter_text: str) -> str:
         _, sha = _get_raw_file(file_path)
         ts = datetime.now(timezone.utc).isoformat()
         _put_raw_file(file_path, content, sha, f"feat: cover letter for {company} {role} — {ts}")
-        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
+        base_url = os.getenv("RENDER_EXTERNAL_URL", "https://miniproject-bye9.onrender.com")
         return f"{base_url}/{file_path}"
     except Exception as exc:
         logger.error("CoverLetterAgent: save_cover_letter failed - %s", exc)
