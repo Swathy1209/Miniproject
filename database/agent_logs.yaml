@@ -1269,3 +1269,628 @@ logs:
   action: Generated Portfolio
   status: success
   timestamp: '2026-03-05T09:40:57'
+- agent: CoverLetterAgent
+  action: Generated 113 cover letters
+  status: success
+  timestamp: '2026-03-05T09:45:39'
+- agent: PracticeAgent
+  action: PracticeAgent run initiated
+  status: success
+  timestamp: '2026-03-05T09:45:42'
+- agent: PracticeAgent
+  action: 'Failed portal for RefinedScience Data Engineering Intern: Gemini failed
+    to generate interview Q&A for RefinedScience - Data Engineering Intern'
+  status: error
+  timestamp: '2026-03-05T09:45:49'
+- agent: PracticeAgent
+  action: 'Failed portal for Cylinder Health Junior Data Engineer: Gemini failed to
+    generate interview Q&A for Cylinder Health - Junior Data Engineer'
+  status: error
+  timestamp: '2026-03-05T09:45:52'
+- agent: PracticeAgent
+  action: 'Failed portal for Tinder Machine Learning Engineer Intern: Gemini failed
+    to generate interview Q&A for Tinder - Machine Learning Engineer Intern'
+  status: error
+  timestamp: '2026-03-05T09:45:55'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Machine Learning Engineer Intern: Gemini failed
+    to generate interview Q&A for Lensa - Machine Learning Engineer Intern'
+  status: error
+  timestamp: '2026-03-05T09:45:58'
+- agent: PracticeAgent
+  action: 'Failed portal for Handshake AI/Machine Learning Engineer Intern: Gemini
+    failed to generate interview Q&A for Handshake - AI/Machine Learning Engineer
+    Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:01'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Machine Learning Intern - Summer 2026: Gemini failed
+    to generate interview Q&A for Lensa - Machine Learning Intern - Summer 2026'
+  status: error
+  timestamp: '2026-03-05T09:46:04'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Data Science Summer Intern (Remote & Paid): Gemini
+    failed to generate interview Q&A for Lensa - Data Science Summer Intern (Remote
+    & Paid)'
+  status: error
+  timestamp: '2026-03-05T09:46:07'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Intern, Data Science and Analytics: Gemini failed
+    to generate interview Q&A for Lensa - Intern, Data Science and Analytics'
+  status: error
+  timestamp: '2026-03-05T09:46:10'
+- agent: PracticeAgent
+  action: 'Failed portal for Transcarent Machine Learning Engineer Intern: Gemini
+    failed to generate interview Q&A for Transcarent - Machine Learning Engineer Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:13'
+- agent: PracticeAgent
+  action: 'Failed portal for Moloco Machine Learning Engineer Intern: Gemini failed
+    to generate interview Q&A for Moloco - Machine Learning Engineer Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:15'
+- agent: PracticeAgent
+  action: 'Failed portal for TikTok (General Hire) Machine Learning Engineer Intern
+    (TikTok-Recommendation) - 2026 Summer (BS/MS): Gemini failed to generate interview
+    Q&A for TikTok - (General Hire) Machine Learning Engineer Intern (TikTok-Recommendation)
+    - 2026 Summer (BS/MS)'
+  status: error
+  timestamp: '2026-03-05T09:46:18'
+- agent: PracticeAgent
+  action: 'Failed portal for Upstart Machine Learning Engineer Intern: Gemini failed
+    to generate interview Q&A for Upstart - Machine Learning Engineer Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:21'
+- agent: PracticeAgent
+  action: 'Failed portal for Typeface ML Engineer Intern: Gemini failed to generate
+    interview Q&A for Typeface - ML Engineer Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:23'
+- agent: PracticeAgent
+  action: 'Failed portal for PathAI Machine Learning Intern/Co-op (Summer 2026): Gemini
+    failed to generate interview Q&A for PathAI - Machine Learning Intern/Co-op (Summer
+    2026)'
+  status: error
+  timestamp: '2026-03-05T09:46:26'
+- agent: PracticeAgent
+  action: 'Failed portal for Staffline Solutions Machine Learning Intern: Gemini failed
+    to generate interview Q&A for Staffline Solutions - Machine Learning Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:29'
+- agent: PracticeAgent
+  action: 'Failed portal for Matson Logistics AI & Machine Learning Intern – Operations:
+    Gemini failed to generate interview Q&A for Matson Logistics - AI & Machine Learning
+    Intern – Operations'
+  status: error
+  timestamp: '2026-03-05T09:46:32'
+- agent: PracticeAgent
+  action: 'Failed portal for Cohere Machine Learning Intern/Co-op  (Spring 2026):
+    Gemini failed to generate interview Q&A for Cohere - Machine Learning Intern/Co-op  (Spring
+    2026)'
+  status: error
+  timestamp: '2026-03-05T09:46:35'
+- agent: PracticeAgent
+  action: 'Failed portal for Cornerstone Building Brands Data Analyst Intern: Gemini
+    failed to generate interview Q&A for Cornerstone Building Brands - Data Analyst
+    Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:37'
+- agent: PracticeAgent
+  action: 'Failed portal for Go Offer Data Analyst: Gemini failed to generate interview
+    Q&A for Go Offer - Data Analyst'
+  status: error
+  timestamp: '2026-03-05T09:46:40'
+- agent: PracticeAgent
+  action: 'Failed portal for AUMOVIO Data Analysis Intern (Yearlong): Gemini failed
+    to generate interview Q&A for AUMOVIO - Data Analysis Intern (Yearlong)'
+  status: error
+  timestamp: '2026-03-05T09:46:42'
+- agent: PracticeAgent
+  action: 'Failed portal for ZURU Toys Data Analyst Intern: Gemini failed to generate
+    interview Q&A for ZURU Toys - Data Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:45'
+- agent: PracticeAgent
+  action: 'Failed portal for Toshiba America Electronic Components, Inc. 5039 Data
+    Analyst Engineering Intern: Gemini failed to generate interview Q&A for Toshiba
+    America Electronic Components, Inc. - 5039 Data Analyst Engineering Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:47'
+- agent: PracticeAgent
+  action: 'Failed portal for Aday Data Analysis Intern: Gemini failed to generate
+    interview Q&A for Aday - Data Analysis Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:50'
+- agent: PracticeAgent
+  action: 'Failed portal for Okta for Developers Data Analyst Intern (Summer 2026):
+    Gemini failed to generate interview Q&A for Okta for Developers - Data Analyst
+    Intern (Summer 2026)'
+  status: error
+  timestamp: '2026-03-05T09:46:53'
+- agent: PracticeAgent
+  action: 'Failed portal for Washington Commanders Data Analyst (Intern): Gemini failed
+    to generate interview Q&A for Washington Commanders - Data Analyst (Intern)'
+  status: error
+  timestamp: '2026-03-05T09:46:57'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Data Analyst Intern: Gemini failed to generate
+    interview Q&A for Lensa - Data Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:46:59'
+- agent: PracticeAgent
+  action: 'Failed portal for Sloan Data Analyst Intern: Gemini failed to generate
+    interview Q&A for Sloan - Data Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:02'
+- agent: PracticeAgent
+  action: 'Failed portal for Go Offer Business Analyst Intern: Gemini failed to generate
+    interview Q&A for Go Offer - Business Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:04'
+- agent: PracticeAgent
+  action: 'Failed portal for Veolia Intern - Business Analyst: Gemini failed to generate
+    interview Q&A for Veolia - Intern - Business Analyst'
+  status: error
+  timestamp: '2026-03-05T09:47:07'
+- agent: PracticeAgent
+  action: 'Failed portal for TikTok Business Analyst Project Intern (GBS SMB) - 2026
+    Start (BS/MS): Gemini failed to generate interview Q&A for TikTok - Business Analyst
+    Project Intern (GBS SMB) - 2026 Start (BS/MS)'
+  status: error
+  timestamp: '2026-03-05T09:47:09'
+- agent: PracticeAgent
+  action: 'Failed portal for TikTok Business Analyst Project Intern - Monetization
+    Strategy & Operations - 2026 Start (BS/MS): Gemini failed to generate interview
+    Q&A for TikTok - Business Analyst Project Intern - Monetization Strategy & Operations
+    - 2026 Start (BS/MS)'
+  status: error
+  timestamp: '2026-03-05T09:47:12'
+- agent: PracticeAgent
+  action: 'Failed portal for Maximus Business Analyst Intern: Gemini failed to generate
+    interview Q&A for Maximus - Business Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:14'
+- agent: PracticeAgent
+  action: 'Failed portal for Apollo Mission Critical Engineering Multiple U.S Locations
+    - Business Analyst Intern (BA-I) - Summer 2026: Gemini failed to generate interview
+    Q&A for Apollo Mission Critical Engineering - Multiple U.S Locations - Business
+    Analyst Intern (BA-I) - Summer 2026'
+  status: error
+  timestamp: '2026-03-05T09:47:17'
+- agent: PracticeAgent
+  action: 'Failed portal for ACCA Careers Business Analyst Intern: Gemini failed to
+    generate interview Q&A for ACCA Careers - Business Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:21'
+- agent: PracticeAgent
+  action: 'Failed portal for MTX Group Business Analyst Intern: Gemini failed to generate
+    interview Q&A for MTX Group - Business Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:24'
+- agent: PracticeAgent
+  action: 'Failed portal for Stripe Data Analyst, Intern (Master''s degree): Gemini
+    failed to generate interview Q&A for Stripe - Data Analyst, Intern (Master''s
+    degree)'
+  status: error
+  timestamp: '2026-03-05T09:47:27'
+- agent: PracticeAgent
+  action: 'Failed portal for Stripe PhD Machine Learning Engineer, Intern: Gemini
+    failed to generate interview Q&A for Stripe - PhD Machine Learning Engineer, Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:30'
+- agent: PracticeAgent
+  action: 'Failed portal for Zuneko Labs Artificial Intelligence (AI): Gemini failed
+    to generate interview Q&A for Zuneko Labs - Artificial Intelligence (AI)'
+  status: error
+  timestamp: '2026-03-05T09:47:33'
+- agent: PracticeAgent
+  action: 'Failed portal for Unnati Enterprises Data Science: Gemini failed to generate
+    interview Q&A for Unnati Enterprises - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:47:36'
+- agent: PracticeAgent
+  action: 'Failed portal for Unknown Data Science Intern: Gemini failed to generate
+    interview Q&A for Unknown - Data Science Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:40'
+- agent: PracticeAgent
+  action: 'Failed portal for Innoknowvex Machine Learning: Gemini failed to generate
+    interview Q&A for Innoknowvex - Machine Learning'
+  status: error
+  timestamp: '2026-03-05T09:47:43'
+- agent: PracticeAgent
+  action: 'Failed portal for Innoknowvex Data Science: Gemini failed to generate interview
+    Q&A for Innoknowvex - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:47:46'
+- agent: PracticeAgent
+  action: 'Failed portal for Emoolar Technology Private Limited Artificial Intelligence
+    (AI): Gemini failed to generate interview Q&A for Emoolar Technology Private Limited
+    - Artificial Intelligence (AI)'
+  status: error
+  timestamp: '2026-03-05T09:47:49'
+- agent: PracticeAgent
+  action: 'Failed portal for Infinity Assurance Solutions Private Limited Computer
+    Vision: Gemini failed to generate interview Q&A for Infinity Assurance Solutions
+    Private Limited - Computer Vision'
+  status: error
+  timestamp: '2026-03-05T09:47:53'
+- agent: PracticeAgent
+  action: 'Failed portal for Mindenious Edutech Data Science: Gemini failed to generate
+    interview Q&A for Mindenious Edutech - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:47:56'
+- agent: PracticeAgent
+  action: 'Failed portal for Unknown Machine Learning Intern: Gemini failed to generate
+    interview Q&A for Unknown - Machine Learning Intern'
+  status: error
+  timestamp: '2026-03-05T09:47:59'
+- agent: PracticeAgent
+  action: 'Failed portal for Arvyax Technologies Private Limited Machine Learning:
+    Gemini failed to generate interview Q&A for Arvyax Technologies Private Limited
+    - Machine Learning'
+  status: error
+  timestamp: '2026-03-05T09:48:02'
+- agent: PracticeAgent
+  action: 'Failed portal for Career Solutions Data Science: Gemini failed to generate
+    interview Q&A for Career Solutions - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:48:05'
+- agent: PracticeAgent
+  action: 'Failed portal for Unknown Artificial Intelligence Intern: Gemini failed
+    to generate interview Q&A for Unknown - Artificial Intelligence Intern'
+  status: error
+  timestamp: '2026-03-05T09:48:07'
+- agent: PracticeAgent
+  action: 'Failed portal for Symonis Machine Learning: Gemini failed to generate interview
+    Q&A for Symonis - Machine Learning'
+  status: error
+  timestamp: '2026-03-05T09:48:10'
+- agent: PracticeAgent
+  action: 'Failed portal for Cloud Back Machine Learning: Gemini failed to generate
+    interview Q&A for Cloud Back - Machine Learning'
+  status: error
+  timestamp: '2026-03-05T09:48:14'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Data Science Intern: Gemini failed to generate
+    interview Q&A for Lensa - Data Science Intern'
+  status: error
+  timestamp: '2026-03-05T09:48:17'
+- agent: PracticeAgent
+  action: 'Failed portal for METRO Regional Transit Authority Data Analyst Intern:
+    Gemini failed to generate interview Q&A for METRO Regional Transit Authority -
+    Data Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:48:20'
+- agent: PracticeAgent
+  action: 'Failed portal for Primetrade.ai Machine Learning (Modeling + Evaluation):
+    Gemini failed to generate interview Q&A for Primetrade.ai - Machine Learning (Modeling
+    + Evaluation)'
+  status: error
+  timestamp: '2026-03-05T09:48:24'
+- agent: PracticeAgent
+  action: 'Failed portal for Primetrade.ai Artificial Intelligence (AI): Gemini failed
+    to generate interview Q&A for Primetrade.ai - Artificial Intelligence (AI)'
+  status: error
+  timestamp: '2026-03-05T09:48:26'
+- agent: PracticeAgent
+  action: 'Failed portal for Primetrade.ai Data Science: Gemini failed to generate
+    interview Q&A for Primetrade.ai - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:48:30'
+- agent: PracticeAgent
+  action: 'Failed portal for Banner Engineering Careers Business Analyst Intern: Gemini
+    failed to generate interview Q&A for Banner Engineering Careers - Business Analyst
+    Intern'
+  status: error
+  timestamp: '2026-03-05T09:48:34'
+- agent: PracticeAgent
+  action: 'Failed portal for Tatari Data Science, Intern: Gemini failed to generate
+    interview Q&A for Tatari - Data Science, Intern'
+  status: error
+  timestamp: '2026-03-05T09:48:38'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Business Analyst Intern: Gemini failed to generate
+    interview Q&A for Lensa - Business Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:48:42'
+- agent: PracticeAgent
+  action: 'Failed portal for Accredian Data Science: Gemini failed to generate interview
+    Q&A for Accredian - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:48:45'
+- agent: PracticeAgent
+  action: 'Failed portal for targetjobs UK Business Analyst Internship: Gemini failed
+    to generate interview Q&A for targetjobs UK - Business Analyst Internship'
+  status: error
+  timestamp: '2026-03-05T09:48:48'
+- agent: PracticeAgent
+  action: 'Failed portal for Fitbae Healthcare Private Limited Data Science: Gemini
+    failed to generate interview Q&A for Fitbae Healthcare Private Limited - Data
+    Science'
+  status: error
+  timestamp: '2026-03-05T09:48:52'
+- agent: PracticeAgent
+  action: 'Failed portal for Aviate Manpower Data Science: Gemini failed to generate
+    interview Q&A for Aviate Manpower - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:48:55'
+- agent: PracticeAgent
+  action: 'Failed portal for Zulitech Solution Machine Learning: Gemini failed to
+    generate interview Q&A for Zulitech Solution - Machine Learning'
+  status: error
+  timestamp: '2026-03-05T09:48:57'
+- agent: PracticeAgent
+  action: 'Failed portal for Zulitech Solution Artificial Intelligence (AI): Gemini
+    failed to generate interview Q&A for Zulitech Solution - Artificial Intelligence
+    (AI)'
+  status: error
+  timestamp: '2026-03-05T09:49:00'
+- agent: PracticeAgent
+  action: 'Failed portal for Kensho Technologies Machine Learning Intern - Summer
+    2026: Gemini failed to generate interview Q&A for Kensho Technologies - Machine
+    Learning Intern - Summer 2026'
+  status: error
+  timestamp: '2026-03-05T09:49:03'
+- agent: PracticeAgent
+  action: 'Failed portal for PANTHERx Rare Pharmacy Intern, Data Science: Gemini failed
+    to generate interview Q&A for PANTHERx Rare Pharmacy - Intern, Data Science'
+  status: error
+  timestamp: '2026-03-05T09:49:06'
+- agent: PracticeAgent
+  action: 'Failed portal for Nuro Machine Learning intern, Behavior Planning: Gemini
+    failed to generate interview Q&A for Nuro - Machine Learning intern, Behavior
+    Planning'
+  status: error
+  timestamp: '2026-03-05T09:49:09'
+- agent: PracticeAgent
+  action: 'Failed portal for ForFutures Financial, Planning, a financial advisory
+    practice of Ameriprise Financial Services LLC Data Science Intern: Gemini failed
+    to generate interview Q&A for ForFutures Financial, Planning, a financial advisory
+    practice of Ameriprise Financial Services LLC - Data Science Intern'
+  status: error
+  timestamp: '2026-03-05T09:49:11'
+- agent: PracticeAgent
+  action: 'Failed portal for Pacific Seafood Machine Vision & Data Science Intern:
+    Gemini failed to generate interview Q&A for Pacific Seafood - Machine Vision &
+    Data Science Intern'
+  status: error
+  timestamp: '2026-03-05T09:49:15'
+- agent: PracticeAgent
+  action: 'Failed portal for Product Manager Accelerator AI Engineer Intern - AI/ML/GenAI
+    Design & Development: Gemini failed to generate interview Q&A for Product Manager
+    Accelerator - AI Engineer Intern - AI/ML/GenAI Design & Development'
+  status: error
+  timestamp: '2026-03-05T09:49:17'
+- agent: PracticeAgent
+  action: 'Failed portal for Viant Technology Machine Learning Engineering Internship
+    - Summer 2026: Gemini failed to generate interview Q&A for Viant Technology -
+    Machine Learning Engineering Internship - Summer 2026'
+  status: error
+  timestamp: '2026-03-05T09:49:20'
+- agent: PracticeAgent
+  action: 'Failed portal for Tatari Data Science BI, Intern: Gemini failed to generate
+    interview Q&A for Tatari - Data Science BI, Intern'
+  status: error
+  timestamp: '2026-03-05T09:49:23'
+- agent: PracticeAgent
+  action: 'Failed portal for TikTok Machine Learning Engineer Intern - Global E-Commerce
+    Content Recommendation - 2026 Summer (BS/MS): Gemini failed to generate interview
+    Q&A for TikTok - Machine Learning Engineer Intern - Global E-Commerce Content
+    Recommendation - 2026 Summer (BS/MS)'
+  status: error
+  timestamp: '2026-03-05T09:49:26'
+- agent: PracticeAgent
+  action: 'Failed portal for TikTok Machine Learning Engineer Intern - Data-Search-TikTok
+    Recommendation Team - 2026 Summer (BS/MS): Gemini failed to generate interview
+    Q&A for TikTok - Machine Learning Engineer Intern - Data-Search-TikTok Recommendation
+    Team - 2026 Summer (BS/MS)'
+  status: error
+  timestamp: '2026-03-05T09:49:29'
+- agent: PracticeAgent
+  action: 'Failed portal for Qorvo, Inc. Data Science Engineer Intern: Gemini failed
+    to generate interview Q&A for Qorvo, Inc. - Data Science Engineer Intern'
+  status: error
+  timestamp: '2026-03-05T09:49:31'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Data Analyst Internship (Summer 2026): Gemini failed
+    to generate interview Q&A for Lensa - Data Analyst Internship (Summer 2026)'
+  status: error
+  timestamp: '2026-03-05T09:49:33'
+- agent: PracticeAgent
+  action: 'Failed portal for Tesla Internship, Data Engineer, Energy (Summer 2026):
+    Gemini failed to generate interview Q&A for Tesla - Internship, Data Engineer,
+    Energy (Summer 2026)'
+  status: error
+  timestamp: '2026-03-05T09:49:36'
+- agent: PracticeAgent
+  action: 'Failed portal for Seaman Corporation Business Analyst Intern: Gemini failed
+    to generate interview Q&A for Seaman Corporation - Business Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:49:39'
+- agent: PracticeAgent
+  action: 'Failed portal for Zyndra Talent Solutions Business Analyst Innovation Intern:
+    Gemini failed to generate interview Q&A for Zyndra Talent Solutions - Business
+    Analyst Innovation Intern'
+  status: error
+  timestamp: '2026-03-05T09:49:44'
+- agent: PracticeAgent
+  action: 'Failed portal for Eightfold AI Senior Machine Learning Engineer: Gemini
+    failed to generate interview Q&A for Eightfold AI - Senior Machine Learning Engineer'
+  status: error
+  timestamp: '2026-03-05T09:49:47'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Intern, Data Science: Gemini failed to generate
+    interview Q&A for Lensa - Intern, Data Science'
+  status: error
+  timestamp: '2026-03-05T09:49:50'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Intern - Data Science: Gemini failed to generate
+    interview Q&A for Lensa - Intern - Data Science'
+  status: error
+  timestamp: '2026-03-05T09:49:54'
+- agent: PracticeAgent
+  action: 'Failed portal for TikTok Machine Learning Engineer Intern - TikTok Search
+    E-Commerce team - 2026 Summer (BS/MS): Gemini failed to generate interview Q&A
+    for TikTok - Machine Learning Engineer Intern - TikTok Search E-Commerce team
+    - 2026 Summer (BS/MS)'
+  status: error
+  timestamp: '2026-03-05T09:49:57'
+- agent: PracticeAgent
+  action: 'Failed portal for ARM Institute Data Analyst Intern: Gemini failed to generate
+    interview Q&A for ARM Institute - Data Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:50:00'
+- agent: PracticeAgent
+  action: 'Failed portal for Storybizz Media Private Limited Artificial Intelligence
+    (AI): Gemini failed to generate interview Q&A for Storybizz Media Private Limited
+    - Artificial Intelligence (AI)'
+  status: error
+  timestamp: '2026-03-05T09:50:03'
+- agent: PracticeAgent
+  action: 'Failed portal for EVgo Intern, Data Analyst (Winter / Spring): Gemini failed
+    to generate interview Q&A for EVgo - Intern, Data Analyst (Winter / Spring)'
+  status: error
+  timestamp: '2026-03-05T09:50:07'
+- agent: PracticeAgent
+  action: 'Failed portal for Family Tree Farms Data Analyst Intern: Gemini failed
+    to generate interview Q&A for Family Tree Farms - Data Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:50:11'
+- agent: PracticeAgent
+  action: 'Failed portal for Thermo Fisher Data Engineer II: Gemini failed to generate
+    interview Q&A for Thermo Fisher - Data Engineer II'
+  status: error
+  timestamp: '2026-03-05T09:50:14'
+- agent: PracticeAgent
+  action: 'Failed portal for Cvent Data Science Intern (Summer 2026): Gemini failed
+    to generate interview Q&A for Cvent - Data Science Intern (Summer 2026)'
+  status: error
+  timestamp: '2026-03-05T09:50:18'
+- agent: PracticeAgent
+  action: 'Failed portal for Generate:Biomedicines Machine Learning Intern: Gemini
+    failed to generate interview Q&A for Generate:Biomedicines - Machine Learning
+    Intern'
+  status: error
+  timestamp: '2026-03-05T09:50:21'
+- agent: PracticeAgent
+  action: 'Failed portal for PathAI Machine Learning Intern/Co-op (Summer/Fall 2026):
+    Gemini failed to generate interview Q&A for PathAI - Machine Learning Intern/Co-op
+    (Summer/Fall 2026)'
+  status: error
+  timestamp: '2026-03-05T09:50:25'
+- agent: PracticeAgent
+  action: 'Failed portal for Anne Klein Official Data Analyst Internship Spring 2026:
+    Gemini failed to generate interview Q&A for Anne Klein Official - Data Analyst
+    Internship Spring 2026'
+  status: error
+  timestamp: '2026-03-05T09:50:28'
+- agent: PracticeAgent
+  action: 'Failed portal for FinZebra AI Engineering & Learning Design: Gemini failed
+    to generate interview Q&A for FinZebra - AI Engineering & Learning Design'
+  status: error
+  timestamp: '2026-03-05T09:50:31'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Machine Learning Science Intern - Summer 2026 Start:
+    Gemini failed to generate interview Q&A for Lensa - Machine Learning Science Intern
+    - Summer 2026 Start'
+  status: error
+  timestamp: '2026-03-05T09:50:35'
+- agent: PracticeAgent
+  action: 'Failed portal for Learning Skills Academy Data And ML Engineer: Gemini
+    failed to generate interview Q&A for Learning Skills Academy - Data And ML Engineer'
+  status: error
+  timestamp: '2026-03-05T09:50:38'
+- agent: PracticeAgent
+  action: 'Failed portal for Catch Sports Analytics Sports Data Analyst: Gemini failed
+    to generate interview Q&A for Catch Sports Analytics - Sports Data Analyst'
+  status: error
+  timestamp: '2026-03-05T09:50:40'
+- agent: PracticeAgent
+  action: 'Failed portal for Hughes ML Engineering Intern: Gemini failed to generate
+    interview Q&A for Hughes - ML Engineering Intern'
+  status: error
+  timestamp: '2026-03-05T09:50:43'
+- agent: PracticeAgent
+  action: 'Failed portal for Airbnb Machine Learning Engineering Intern (PhD): Gemini
+    failed to generate interview Q&A for Airbnb - Machine Learning Engineering Intern
+    (PhD)'
+  status: error
+  timestamp: '2026-03-05T09:50:46'
+- agent: PracticeAgent
+  action: 'Failed portal for The Institute for Advanced Learning and Research Artificial
+    Intelligence / Machine Learning Intern: Gemini failed to generate interview Q&A
+    for The Institute for Advanced Learning and Research - Artificial Intelligence
+    / Machine Learning Intern'
+  status: error
+  timestamp: '2026-03-05T09:50:49'
+- agent: PracticeAgent
+  action: 'Failed portal for Lensa Business Analyst (Intern) - United States: Gemini
+    failed to generate interview Q&A for Lensa - Business Analyst (Intern) - United
+    States'
+  status: error
+  timestamp: '2026-03-05T09:50:52'
+- agent: PracticeAgent
+  action: 'Failed portal for Veolia Business Analyst Intern: Gemini failed to generate
+    interview Q&A for Veolia - Business Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:50:56'
+- agent: PracticeAgent
+  action: 'Failed portal for Bankers Financial Corporation Business Analyst Intern:
+    Gemini failed to generate interview Q&A for Bankers Financial Corporation - Business
+    Analyst Intern'
+  status: error
+  timestamp: '2026-03-05T09:50:58'
+- agent: PracticeAgent
+  action: 'Failed portal for Tax-O-Smart LLP Artificial Intelligence (AI): Gemini
+    failed to generate interview Q&A for Tax-O-Smart LLP - Artificial Intelligence
+    (AI)'
+  status: error
+  timestamp: '2026-03-05T09:51:01'
+- agent: PracticeAgent
+  action: 'Failed portal for Talent Corner HR Services Machine Learning Engineer:
+    Gemini failed to generate interview Q&A for Talent Corner HR Services - Machine
+    Learning Engineer'
+  status: error
+  timestamp: '2026-03-05T09:51:04'
+- agent: PracticeAgent
+  action: 'Failed portal for Unknown Company – Source Incomplete Data Science Intern:
+    Gemini failed to generate interview Q&A for Unknown Company – Source Incomplete
+    - Data Science Intern'
+  status: error
+  timestamp: '2026-03-05T09:51:07'
+- agent: PracticeAgent
+  action: 'Failed portal for Wobot Intelligence Private Limited Computer Vision: Gemini
+    failed to generate interview Q&A for Wobot Intelligence Private Limited - Computer
+    Vision'
+  status: error
+  timestamp: '2026-03-05T09:51:10'
+- agent: PracticeAgent
+  action: 'Failed portal for Resolute AI Software Private Limited AI Engineer: Gemini
+    failed to generate interview Q&A for Resolute AI Software Private Limited - AI
+    Engineer'
+  status: error
+  timestamp: '2026-03-05T09:51:13'
+- agent: PracticeAgent
+  action: 'Failed portal for Unknown Company – Source Incomplete Machine Learning
+    Intern: Gemini failed to generate interview Q&A for Unknown Company – Source Incomplete
+    - Machine Learning Intern'
+  status: error
+  timestamp: '2026-03-05T09:51:15'
+- agent: PracticeAgent
+  action: 'Failed portal for OralKart Machine Learning: Gemini failed to generate
+    interview Q&A for OralKart - Machine Learning'
+  status: error
+  timestamp: '2026-03-05T09:51:18'
+- agent: PracticeAgent
+  action: 'Failed portal for Bro''s Innovations And Technology. Data Science: Gemini
+    failed to generate interview Q&A for Bro''s Innovations And Technology. - Data
+    Science'
+  status: error
+  timestamp: '2026-03-05T09:51:20'
+- agent: PracticeAgent
+  action: 'Failed portal for Unknown Company – Source Incomplete Artificial Intelligence
+    Intern: Gemini failed to generate interview Q&A for Unknown Company – Source Incomplete
+    - Artificial Intelligence Intern'
+  status: error
+  timestamp: '2026-03-05T09:51:24'
