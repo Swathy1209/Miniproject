@@ -28,9 +28,7 @@ import os
 import re
 from datetime import datetime, timezone
 from typing import Optional
-
 from dotenv import load_dotenv
-from openai import OpenAI
 
 from backend.github_yaml_db import (
     read_yaml_from_github,
@@ -45,14 +43,6 @@ from backend.utils.resume_parser import download_and_extract
 
 load_dotenv()
 logger = logging.getLogger("OrchestrAI.PracticeAgent")
-
-OPENAI_API_KEY = os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", ""))
-GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-openai_client = OpenAI(
-    api_key=OPENAI_API_KEY,
-    base_url=GEMINI_BASE_URL,
-    max_retries=0,  # Circuit breaker handles quota errors
-) if OPENAI_API_KEY else None
 
 # Use shared circuit breaker from ai_engine
 from backend.utils.ai_engine import safe_llm_call as _cb_llm_call, _is_daily_quota_error
@@ -1269,6 +1259,9 @@ def run_practice_agent() -> list[dict]:
         tech_skills = job.get("technical_skills", [])
         key = (company, role)
 
+        # Respect Gemini RPM limit (15 RPM)
+        time.sleep(4)
+
         logger.info("PracticeAgent: Generating portal for %s — %s", company, role)
 
         # Skill gap for this job
@@ -1278,21 +1271,26 @@ def run_practice_agent() -> list[dict]:
         try:
             # -- Feature 1: Interview Q&A --
             qa_pairs = generate_interview_qa(company, role, tech_skills, resume_text, user_skills)
+            time.sleep(2)
 
             # -- Feature 2: HR Introduction --
             hr_intro = generate_hr_introduction(user, company, role, resume_text)
+            time.sleep(2)
 
             # -- Feature 3: Tamil → English (AI-generated, role-specific) --
             translations = _generate_ai_translations(role, company, user_skills)
+            time.sleep(2)
 
             # -- Feature 4: Speaking Practice --
             speaking = generate_speaking_practice(role, company, tech_skills, user_skills)
+            time.sleep(2)
 
             # -- Feature 5: Coding Sheets --
             coding_sheets = generate_coding_sheets(role, tech_skills)
 
             # -- Feature 6: Project Recommendations --
             projects = generate_project_recommendations(missing_skills, role, company)
+            time.sleep(2)
 
             # -- Feature 7: Course Recommendations --
             courses = generate_course_recommendations(

@@ -21,10 +21,9 @@ from __future__ import annotations
 import logging
 import os
 import re
+import time
 from datetime import datetime, timezone
-
 from dotenv import load_dotenv
-from openai import OpenAI
 
 from backend.github_yaml_db import (
     read_yaml_from_github,
@@ -36,10 +35,6 @@ from backend.github_yaml_db import (
 
 load_dotenv()
 logger = logging.getLogger("OrchestrAI.InterviewCoachAgent")
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", ""))
-GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-openai_client = OpenAI(api_key=GEMINI_API_KEY, base_url=GEMINI_BASE_URL, max_retries=0) if GEMINI_API_KEY else None
 
 JOBS_FILE             = "database/jobs.yaml"
 USERS_FILE            = "database/users.yaml"
@@ -67,6 +62,8 @@ def _is_data_role(role: str) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 # LLM Question Generator
 # ─────────────────────────────────────────────────────────────────────────────
+
+from backend.utils.ai_engine import safe_llm_call
 
 def _generate_questions(company: str, role: str, skills: list[str], user_skills: list[str]) -> dict:
     """
@@ -123,18 +120,17 @@ CODING:
         ] if include_case else [],
     }
 
-    if not openai_client:
+    raw = safe_llm_call(
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=600,
+        temperature=0.7,
+        context=f"interview:{company[:20]}"
+    )
+
+    if not raw:
         return fallback
 
     try:
-        resp = openai_client.chat.completions.create(
-            model="gemini-2.0-flash",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=600,
-            temperature=0.7,
-        )
-        raw = resp.choices[0].message.content.strip()
-
         def _extract_section(label: str, text: str) -> list[str]:
             pattern = rf"{label}:?\s*\n(.*?)(?=\n[A-Z]+:|\Z)"
             match = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
@@ -156,7 +152,7 @@ CODING:
         }
 
     except Exception as exc:
-        logger.warning("InterviewCoachAgent: LLM failed for %s — %s. Using fallback.", role, exc)
+        logger.warning("InterviewCoachAgent: Parsing failed for %s — %s. Using fallback.", role, exc)
         return fallback
 
 
@@ -465,12 +461,16 @@ def run_interview_coach_agent() -> list[dict]:
     index    = []
     generated = 0
 
-    for job in jobs:  # Process all internships as requested
+    for job in jobs:
         if not isinstance(job, dict):
             continue
 
         company    = job.get("company", "Unknown")
         role       = job.get("role", "Intern")
+        
+        # Respect Gemini RPM limit
+        time.sleep(3)
+        
         job_skills = [str(s) for s in job.get("technical_skills", []) if s]
 
         try:

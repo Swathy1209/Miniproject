@@ -19,6 +19,7 @@ import logging
 import os
 import re
 import base64
+import time
 import requests
 from datetime import datetime, timezone
 from typing import Optional
@@ -244,6 +245,10 @@ def run_resume_optimization_agent() -> list[dict]:
     for job in jobs:
         company = job.get("company", "Unknown Company")
         role = job.get("role", "Unknown Role")
+        
+        # Respect Gemini Free Tier RPM (15)
+        time.sleep(3)
+        
         tech_skills = job.get("technical_skills", [])
         
         job_skill_set = {str(s).strip() for s in tech_skills if str(s).strip()}

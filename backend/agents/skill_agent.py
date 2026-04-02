@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -150,6 +151,10 @@ def run_skill_agent() -> dict:
         for job in jobs:
             company = job.get("company", "Unknown Company")
             role = job.get("role", "Unknown Role")
+            
+            # Respect Gemini Free Tier RPM (15)
+            time.sleep(3)
+            
             tech_skills = job.get("technical_skills", [])
             
             # Compute missing skills for this job

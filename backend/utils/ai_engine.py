@@ -55,6 +55,8 @@ def _mark_quota_exceeded(model: str) -> None:
         "All further LLM calls will use fallback for this pipeline run.", model
     )
 
+import time
+
 def safe_llm_call(
     messages: list[dict],
     max_tokens: int = 400,
@@ -65,7 +67,8 @@ def safe_llm_call(
     Central LLM call with:
      - Circuit breaker (skip immediately if daily quota exceeded)
      - Model fallback chain (tries each model before giving up)
-     - No per-model retry on RESOURCE_EXHAUSTED
+     - Retry logic for transient rate limits (429)
+     - No per-model retry on RESOURCE_EXHAUSTED daily quota
     Returns the response text or None if all models fail.
     """
     global _AI_QUOTA_EXCEEDED
@@ -81,21 +84,32 @@ def safe_llm_call(
     client = OpenAI(api_key=OPENAI_API_KEY, base_url=GEMINI_BASE_URL, max_retries=0)
 
     for model in GEMINI_MODELS:
-        try:
-            resp = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-            )
-            return resp.choices[0].message.content.strip()
-        except Exception as exc:
-            if _is_daily_quota_error(exc):
-                _mark_quota_exceeded(model)
-                return None  # Circuit breaker opened — stop immediately
-            # Transient error on this model → try next
-            logger.debug("AIEngine: %s failed for '%s', trying next model — %s", model, context, exc)
-            continue
+        max_retries = 2
+        for attempt in range(max_retries + 1):
+            try:
+                resp = client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+                return resp.choices[0].message.content.strip()
+            except Exception as exc:
+                err_msg = str(exc)
+                if _is_daily_quota_error(exc):
+                    _mark_quota_exceeded(model)
+                    return None  # Circuit breaker opened — stop immediately
+                
+                if "429" in err_msg and attempt < max_retries:
+                    # Transient rate limit (per minute) — wait and retry same model
+                    wait_time = 4 * (attempt + 1)
+                    logger.warning("AIEngine: %s rate limited (429) for '%s'. Retrying in %ds...", model, context, wait_time)
+                    time.sleep(wait_time)
+                    continue
+
+                # For other errors or if retries exhausted, move to next model
+                logger.debug("AIEngine: %s failed for '%s', trying next model — %s", model, context, exc)
+                break
 
     logger.warning("AIEngine: All models exhausted for '%s' — using fallback.", context)
     return None

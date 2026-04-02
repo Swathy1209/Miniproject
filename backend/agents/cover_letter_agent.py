@@ -13,7 +13,6 @@ import re
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
-from openai import OpenAI
 
 from backend.github_yaml_db import (
     read_yaml_from_github,
@@ -25,12 +24,6 @@ from backend.github_yaml_db import (
 
 load_dotenv()
 logger = logging.getLogger("OrchestrAI.CoverLetterAgent")
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", ""))
-GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-openai_client = OpenAI(api_key=GEMINI_API_KEY, base_url=GEMINI_BASE_URL, max_retries=0) if GEMINI_API_KEY else None
-
-JOBS_FILE = "database/jobs.yaml"
 USERS_FILE = "database/users.yaml"
 COVER_LETTER_INDEX_FILE = "database/cover_letter_index.yaml"
 
@@ -68,6 +61,10 @@ def read_user_profile() -> dict:
     except Exception:
         return DEFAULT_USER
 
+import time
+
+from backend.utils.ai_engine import safe_llm_call
+
 def generate_cover_letter(job: dict, user: dict) -> str:
     user_name = user.get("name", "Swathy G")
     resume_skills = ", ".join(user.get("resume_skills", DEFAULT_USER["resume_skills"])[:8])
@@ -96,22 +93,18 @@ Instructions:
 - Write in first person, confident and professional tone
 """
 
-    if openai_client:
-        try:
-            response = openai_client.chat.completions.create(
-                model="gemini-2.0-flash",
-                messages=[
-                    {"role": "system", "content": "You are an expert career counselor. Generate complete, professional cover letters with no placeholders."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=400,
-                temperature=0.7
-            )
-            content = response.choices[0].message.content.strip()
-            if content and len(content) > 50:
-                return content
-        except Exception as exc:
-            logger.warning("CoverLetterAgent: LLM generation failed for %s - %s", company, exc)
+    content = safe_llm_call(
+        messages=[
+            {"role": "system", "content": "You are an expert career counselor. Generate complete, professional cover letters with no placeholders."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=400,
+        temperature=0.7,
+        context=f"cover letter:{company[:20]}"
+    )
+
+    if content and len(content) > 50:
+        return content
 
     # Fallback template
     return (
@@ -165,6 +158,9 @@ def run_cover_letter_agent() -> list[dict]:
     for job in jobs:
         company = job.get("company", "Unknown")
         role = job.get("role", "Intern")
+
+        # Small delay to respect Gemini RPM (15 RPM)
+        time.sleep(3)
 
         try:
             letter = generate_cover_letter(job, user)

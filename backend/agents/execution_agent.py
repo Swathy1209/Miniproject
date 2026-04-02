@@ -120,14 +120,18 @@ def run_orchestrai_pipeline():
     base_url      = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
     analytics_url = f"{base_url}/analytics"
 
+    import time
+
     # STEP 1: Fetch internships
     run_career_agent()
+    time.sleep(5)
 
     # STEP 1.5: Process any stored interview feedback → update skill gaps BEFORE analysis
     run_interview_feedback_agent()
 
     # STEP 2: Generate per-job skill gap analysis
     run_skill_agent()
+    time.sleep(5)
 
     # STEP 2.45: Scan ALL Repositories for Security Vulnerabilities (no cloning)
     run_repo_security_scanner_agent()
@@ -140,12 +144,15 @@ def run_orchestrai_pipeline():
 
     # STEP 2.5: Generate cover letters
     run_cover_letter_agent()
+    time.sleep(5)
 
     # STEP 2.55: Generate interview practice portals
     run_practice_agent()
+    time.sleep(5)
 
     # STEP 2.6: Optimize Resumes
     run_resume_optimization_agent()
+    time.sleep(5)
 
     # STEP 2.7: Generate Application Packages
     run_auto_apply_agent()
@@ -155,6 +162,7 @@ def run_orchestrai_pipeline():
 
     # STEP 2.9: Generate Career Strategy
     run_career_strategy_agent()
+    time.sleep(5)
 
     # STEP 2.92: Compute Career Readiness Score (uses security + skills + portfolio + practice)
     run_career_readiness_agent()
@@ -167,6 +175,7 @@ def run_orchestrai_pipeline():
 
     # STEP 2.94: Generate per-internship mock interview pages
     run_interview_coach_agent()
+    time.sleep(5)
 
     # STEP 2.95: Generate per-internship customized portfolio pages
     run_per_internship_portfolio_agent()
