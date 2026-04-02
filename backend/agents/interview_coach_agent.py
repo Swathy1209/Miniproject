@@ -128,6 +128,7 @@ CODING:
     )
 
     if not raw:
+        logger.warning(f"InterviewCoachAgent: No LLM response for {company}. Using template fallback.")
         return fallback
 
     try:
@@ -437,49 +438,52 @@ async function submitFeedback() {{
 </html>"""
 
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Main agent
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run_interview_coach_agent() -> list[dict]:
+    """
+    Main agent for generating mock interview simulations.
+    """
+    from backend.utils.ai_engine import is_all_quota_exhausted
     logger.info("InterviewCoachAgent: Starting...")
 
-    jobs_data  = read_yaml_from_github(JOBS_FILE)
-    jobs       = jobs_data.get("jobs", []) if isinstance(jobs_data, dict) else []
+    jobs_data = read_yaml_from_github(JOBS_FILE)
+    jobs = jobs_data.get("jobs", []) if isinstance(jobs_data, dict) else []
 
     users_data = read_yaml_from_github(USERS_FILE)
-    user       = users_data.get("user", {}) if isinstance(users_data, dict) else {}
-    user_name  = user.get("name", DEFAULT_USER_NAME)
+    user = users_data.get("user", {}) if isinstance(users_data, dict) else {}
+    user_name = user.get("name", DEFAULT_USER_NAME)
     user_skills = user.get("resume_skills", DEFAULT_SKILLS)
 
-    from backend.github_yaml_db import DATA_DIR
-    interview_dir = os.path.join(DATA_DIR, "frontend", "interview")
-    os.makedirs(interview_dir, exist_ok=True)
+    # Load existing sessions to skip duplicates
+    existing_data = read_yaml_from_github(INTERVIEW_INDEX_FILE)
+    index = existing_data.get("interview_sessions", []) if isinstance(existing_data, dict) else []
+    existing_keys = {(s.get("company"), s.get("role")) for s in index}
 
+    # Process last 30 jobs
+    jobs_to_process = jobs[-30:]
+    new_entries = 0
     base_url = os.getenv("RENDER_EXTERNAL_URL", "https://orchestrai-agent.onrender.com")
-    index    = []
-    generated = 0
-
-    # Limit to top 10 most recent jobs to avoid daily quota exhaustion (1500 RPD)
-    jobs_to_process = jobs[-10:]
-    logger.info("InterviewCoachAgent: Processing %d most recent jobs.", len(jobs_to_process))
 
     for job in jobs_to_process:
-        if not isinstance(job, dict):
+        company = job.get("company", "Unknown")
+        role = job.get("role", "Intern")
+        
+        if (company, role) in existing_keys:
+            logger.info("InterviewCoachAgent: Skipping %s - %s (exists)", company, role)
             continue
-
-        company    = job.get("company", "Unknown")
-        role       = job.get("role", "Intern")
-        
-        # Respect Gemini RPM limit
+            
+        if is_all_quota_exhausted():
+            logger.warning("InterviewCoachAgent: Quota exhausted - stopping.")
+            break
+            
         time.sleep(3)
-        
         job_skills = [str(s) for s in job.get("technical_skills", []) if s]
 
         try:
             questions = _generate_questions(company, role, job_skills, user_skills)
-
             html = _build_interview_html(
                 company=company,
                 role=role,
@@ -489,43 +493,32 @@ def run_interview_coach_agent() -> list[dict]:
             )
 
             slug = f"{_slugify(company)}_{_slugify(role)}"
-            file_name = f"{slug}.html"
-            file_path = f"frontend/interview/{file_name}"
-            
+            file_path = f"frontend/interview/{slug}.html"
             _, sha = _get_raw_file(file_path)
-            ts = datetime.now(timezone.utc).isoformat()
-            _put_raw_file(file_path, html, sha, f"feat(interview): generated for {company} — {ts}")
+            _put_raw_file(file_path, html, sha, f"feat: interview for {company}")
 
             interview_url = f"{base_url}/interview/{slug}.html"
             index.append({
-                "company":        company,
-                "role":           role,
+                "company": company,
+                "role": role,
                 "interview_link": interview_url,
-                "generated_at":   datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+                "generated_at": datetime.now(timezone.utc).isoformat(),
             })
-            generated += 1
-            logger.info("InterviewCoachAgent: ✓ %s — %s → %s", company, role, interview_url)
+            new_entries += 1
+            logger.info("InterviewCoachAgent: ✓ %s", company)
 
         except Exception as exc:
-            logger.error("InterviewCoachAgent: Failed for %s %s — %s", company, role, exc)
+            logger.error("InterviewCoachAgent: Failed for %s: %s", company, exc)
 
-    # Save index to GitHub
-    try:
+    if new_entries > 0:
         write_yaml_to_github(INTERVIEW_INDEX_FILE, {"interview_sessions": index})
-    except Exception as exc:
-        logger.error("InterviewCoachAgent: Failed to save index — %s", exc)
-
-    try:
         append_log_entry({
-            "agent":     "InterviewCoachAgent",
-            "action":    f"Generated {generated} interview simulation pages",
-            "status":    "success" if generated > 0 else "partial",
-            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
+            "agent": "InterviewCoachAgent",
+            "action": f"Generated {new_entries} new interview pages",
+            "status": "success",
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
-    except Exception:
-        pass
 
-    logger.info("InterviewCoachAgent: Done. %d pages generated.", generated)
     return index
 
 

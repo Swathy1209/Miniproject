@@ -143,24 +143,40 @@ def save_cover_letter(company: str, role: str, letter_text: str) -> str:
         return ""
 
 def run_cover_letter_agent() -> list[dict]:
+    """
+    Main agent for generating personalized cover letters.
+    """
+    from backend.utils.ai_engine import is_all_quota_exhausted
     logger.info("CoverLetterAgent: Starting...")
+    
     jobs = read_jobs()
     user = read_user_profile()
 
     if not jobs:
         logger.warning("CoverLetterAgent: No jobs found. Skipping.")
-        append_log_entry({"agent": "CoverLetterAgent", "action": "Skipped - no jobs", "status": "partial",
-                          "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")})
         return []
 
-    index_data = []
-    processed = 0
+    # Load existing index to skip duplicates
+    existing_data = read_yaml_from_github(COVER_LETTER_INDEX_FILE)
+    index = existing_data.get("cover_letters", []) if isinstance(existing_data, dict) else []
+    existing_keys = {(s.get("company"), s.get("role")) for s in index}
 
-    for job in jobs:
+    # Process last 40 jobs (cover letters are faster)
+    jobs_to_process = jobs[-40:]
+    new_entries = 0
+
+    for job in jobs_to_process:
         company = job.get("company", "Unknown")
         role = job.get("role", "Intern")
 
-        # Small delay to respect Gemini RPM (15 RPM)
+        if (company, role) in existing_keys:
+            logger.info("CoverLetterAgent: Skipping %s - %s (exists)", company, role)
+            continue
+            
+        if is_all_quota_exhausted():
+            logger.warning("CoverLetterAgent: Quota exhausted - stopping.")
+            break
+
         time.sleep(3)
 
         try:
@@ -169,24 +185,22 @@ def run_cover_letter_agent() -> list[dict]:
                 continue
             link = save_cover_letter(company, role, letter)
             if link:
-                index_data.append({"company": company, "role": role, "link": link})
-                processed += 1
-                logger.info("CoverLetterAgent: ✓ %s — %s", company, role)
+                index.append({"company": company, "role": role, "link": link})
+                new_entries += 1
+                logger.info("CoverLetterAgent: ✓ %s", company)
         except Exception as exc:
-            logger.error("CoverLetterAgent: Failed for %s %s - %s", company, role, exc)
+            logger.error("CoverLetterAgent: Failed for %s: %s", company, exc)
 
-    if index_data:
-        write_yaml_to_github(COVER_LETTER_INDEX_FILE, {"cover_letters": index_data})
+    if new_entries > 0:
+        write_yaml_to_github(COVER_LETTER_INDEX_FILE, {"cover_letters": index})
+        append_log_entry({
+            "agent": "CoverLetterAgent",
+            "action": f"Generated {new_entries} new cover letters",
+            "status": "success",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
 
-    append_log_entry({
-        "agent": "CoverLetterAgent",
-        "action": f"Generated {processed} cover letters",
-        "status": "success" if processed > 0 else "partial",
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-    })
-
-    logger.info("CoverLetterAgent: Done. Generated %d cover letters.", processed)
-    return index_data
+    return index
 
 
 if __name__ == "__main__":

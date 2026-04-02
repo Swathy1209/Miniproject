@@ -23,12 +23,12 @@ logger = logging.getLogger("OrchestrAI.AIEngine")
 OPENAI_API_KEY: str = os.getenv("GEMINI_API_KEY", os.getenv("OPENAI_API_KEY", ""))
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
-# Model priority order — each has its own separate daily quota pool
-# gemini-1.5-flash: 1500 RPD | gemini-2.0-flash: 1500 RPD (separate pool)
+# Model priority order — using versions known to work with the v1beta/openai shim.
+# gemini-1.5-flash: 1500 RPD | gemini-1.5-pro: 50 RPD
 GEMINI_MODELS = [
-    os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),  # primary — override via env var
-    "gemini-2.0-flash-lite",                          # fallback 1
-    "gemini-2.0-flash",                               # fallback 2
+    os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),  # primary
+    "gemini-1.5-flash-8b",                           # fallback 1
+    "gemini-1.5-pro",                                # fallback 2 (low quota but high quality)
 ]
 
 # ── Per-Model Circuit Breaker ──────────────────────────────────────────────
